@@ -1,0 +1,65 @@
+/**
+ * config.js — Configuración Eryza Barber
+ */
+
+export const APP_CONFIG = {
+  name: 'Eryza Barber',
+  location: 'Eryza Barber, Chile',
+  whatsapp: '56979608342',
+  contactEmail: 'Fernandoisaias2606@gmail.com',
+
+  businessHours: {
+    slotInterval: 45,
+    /** Por día de la semana: 0=domingo … 6=sábado */
+    schedule: {
+      0: { open: 11, close: 14 },
+      1: { open: 10, close: 21 },
+      2: { open: 10, close: 21 },
+      3: { open: 10, close: 21 },
+      4: { open: 10, close: 21 },
+      5: { open: 10, close: 21 },
+      6: { open: 10, close: 21 },
+    },
+    closedDays: [],
+  },
+
+  storage: {
+    stateKey: 'eryza_booking_state',
+    stateVersion: 1,
+    stateTtlMs: 30 * 60 * 1000,
+    bookingsKey: 'eryza_bookings',
+  },
+
+  features: {
+    useMockAvailability: true,
+    useEmailJS: true,
+    useResendBackend: false,
+    useQStashBackend: false,
+  },
+
+  emailjs: {
+    serviceId: 'REEMPLAZAR_ESTO',
+    templateClienteId: 'REEMPLAZAR_ESTO',
+    templateBarberoId: 'REEMPLAZAR_ESTO',
+    publicKey: 'REEMPLAZAR_ESTO',
+  },
+
+  api: {
+    availability: '/api/availability',
+    sendEmail: '/api/send-booking-email',
+    scheduleReminder: '/api/schedule-reminder',
+  },
+
+  publicUrl: 'https://kirit0-1.github.io/eryza-booking',
+};
+
+export function getHoursForDay(dayOfWeek) {
+  return APP_CONFIG.businessHours.schedule[dayOfWeek] ?? null;
+}
+
+export function isEmailConfigured() {
+  const { emailjs, features } = APP_CONFIG;
+  return features.useEmailJS
+    && emailjs.publicKey !== 'REEMPLAZAR_ESTO'
+    && emailjs.serviceId !== 'REEMPLAZAR_ESTO';
+}
