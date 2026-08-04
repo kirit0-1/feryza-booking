@@ -1,10 +1,12 @@
 /**
  * email.js — Correos de confirmación Feryza Barber
+ * El barbero siempre recibe en Fernandoisaias2606@gmail.com
  */
 
 import { APP_CONFIG, isEmailConfigured } from './config.js';
-import { getBarberEmail } from './data.js';
 import { formatPrice, toISODate } from './utils.js';
+
+const BARBER_EMAIL = 'Fernandoisaias2606@gmail.com';
 
 let emailjsReady = false;
 
@@ -27,6 +29,7 @@ function buildTemplateParams(state) {
     pago: state.pago.name,
     total: formatPrice(state.service.price),
     telefono: state.telefono,
+    cliente: state.nombre,
   };
 }
 
@@ -43,7 +46,7 @@ async function sendViaEmailJS(state) {
 
   await emailjs.send(serviceId, templateBarberoId, {
     ...baseParams,
-    to_email: getBarberEmail(state.barber.id),
+    to_email: BARBER_EMAIL,
     to_name: state.barber.name,
   });
 
@@ -56,7 +59,7 @@ async function sendViaResend(state) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       cliente: { email: state.correo, nombre: state.nombre, telefono: state.telefono },
-      barbero: { id: state.barber.id, nombre: state.barber.name, email: getBarberEmail(state.barber.id) },
+      barbero: { id: state.barber.id, nombre: state.barber.name, email: BARBER_EMAIL },
       reserva: {
         servicio: state.service.name,
         fecha: toISODate(state.date),

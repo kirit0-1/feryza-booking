@@ -1,11 +1,15 @@
 /**
  * availability.js — Motor de disponibilidad Feryza Barber
- * Intervalos fijos de 45 min + horarios por día de la semana.
+ * Intervalos fijos de 45 min + horarios por día. Persistencia: Supabase (o localStorage mock).
  */
 
-import { APP_CONFIG, getHoursForDay } from './config.js';
+import { APP_CONFIG, getHoursForDay, useLocalAvailability } from './config.js';
 import { BARBERS, getRealBarberIds } from './data.js';
 import { parseTime, formatTime } from './utils.js';
+import {
+  fetchConfirmedBookings,
+  insertBooking,
+} from './supabase.js';
 
 const { bookingsKey } = APP_CONFIG.storage;
 const { slotInterval } = APP_CONFIG.businessHours;
@@ -54,22 +58,18 @@ function ensureSeedData() {
 }
 
 export async function fetchBookings(barberoId, fecha) {
-  ensureSeedData();
-
-  if (!APP_CONFIG.features.useMockAvailability) {
+  if (!useLocalAvailability()) {
     try {
-      const res = await fetch(
-        `${APP_CONFIG.api.availability}?barbero=${barberoId}&fecha=${fecha}&detail=bookings`,
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return data.bookings ?? [];
+      const bookings = await fetchConfirmedBookings(barberoId, fecha);
+      const realIds = barberoId === 'any' ? getRealBarberIds() : [barberoId];
+      return bookings.filter((b) => realIds.includes(b.barberId));
     } catch (err) {
-      console.error('[availability] Error API:', err);
+      console.error('[availability] Error Supabase:', err);
       return [];
     }
   }
 
+  ensureSeedData();
   const all = getLocalBookings();
   const realIds = barberoId === 'any' ? getRealBarberIds() : [barberoId];
   return all.filter((b) => b.fecha === fecha && realIds.includes(b.barberId));
@@ -113,19 +113,31 @@ export async function saveBooking(booking) {
     ? await pickAvailableBarber(booking.fecha, booking.time, booking.duration)
     : booking.barberId;
 
-  const record = { ...booking, barberId: assignedBarberId };
+  const record = {
+    ...booking,
+    barberId: assignedBarberId,
+    serviceName: booking.serviceName ?? booking.serviceId,
+    pago: booking.pago ?? '',
+    total: booking.total ?? 0,
+  };
 
-  if (!APP_CONFIG.features.useMockAvailability) {
-    const res = await fetch('/api/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(record),
-    });
-    if (!res.ok) throw new Error(`Error al guardar reserva: HTTP ${res.status}`);
-    return record;
+  if (!useLocalAvailability()) {
+    const saved = await insertBooking(record);
+    return { ...record, id: saved.id, barberId: saved.barberId };
   }
 
   const all = getLocalBookings();
+  const conflict = all.some(
+    (b) => b.barberId === record.barberId
+      && b.fecha === record.fecha
+      && b.time === record.time,
+  );
+  if (conflict) {
+    const err = new Error('Esa hora ya está tomada. Elige otro horario.');
+    err.code = 'SLOT_TAKEN';
+    throw err;
+  }
+
   all.push(record);
   setLocalBookings(all);
   return record;

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#9B8EC4">
+  <meta name="robots" content="noindex">
+  <title>Panel barbero — Feryza Barber</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="admin-body">
+
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="brand">
+        <img class="brand-logo" src="assets/logo-dark.png" alt="Feryza Barber" width="42" height="42">
+        <div>
+          <div>FERYZA BARBER</div>
+          <div class="brand-sub">Panel del barbero</div>
+        </div>
+      </div>
+      <a class="header-back" href="index.html">Reservas</a>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-login" id="adminLogin">
+      <h1 class="admin-title">Acceso</h1>
+      <p class="admin-sub">Ingresa el PIN para ver y gestionar las citas</p>
+      <form class="admin-pin-form" id="pinForm" autocomplete="off">
+        <label class="field" for="adminPin">
+          <span>PIN</span>
+          <input type="password" id="adminPin" inputmode="text" placeholder="••••••••" maxlength="32" required>
+          <span class="field-error" id="pinError"></span>
+        </label>
+        <button type="submit" class="btn-continue" id="btnPin">Entrar</button>
+      </form>
+    </section>
+
+    <section class="admin-panel hidden" id="adminPanel">
+      <div class="admin-toolbar">
+        <div>
+          <h1 class="admin-title">Próximas citas</h1>
+          <p class="admin-sub" id="adminCount">Cargando…</p>
+        </div>
+        <div class="admin-toolbar-actions">
+          <button type="button" class="btn-sec admin-btn-sm" id="btnRefresh" aria-label="Actualizar">
+            Actualizar
+          </button>
+          <button type="button" class="btn-sec admin-btn-sm" id="btnLogout">Salir</button>
+        </div>
+      </div>
+      <div class="admin-config-warn hidden" id="configWarn">
+        Configura Supabase en <code>scripts/config.js</code> (URL y anon key) y ejecuta <code>supabase/schema.sql</code>.
+      </div>
+      <div id="bookingsList" class="admin-list"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="scripts/admin.js"></script>
+</body>
+</html>

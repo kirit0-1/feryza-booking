@@ -30,8 +30,20 @@ export const APP_CONFIG = {
     bookingsKey: 'feryza_bookings',
   },
 
+  /** Pegar URL y anon key del proyecto Supabase */
+  supabase: {
+    url: 'REEMPLAZAR_SUPABASE_URL',
+    anonKey: 'REEMPLAZAR_SUPABASE_ANON_KEY',
+  },
+
+  /** PIN del panel del barbero (demo) */
+  admin: {
+    pin: 'feryza2026',
+  },
+
   features: {
-    useMockAvailability: true,
+    /** false = usa Supabase cuando hay keys; true = localStorage mock */
+    useMockAvailability: false,
     useEmailJS: true,
     useResendBackend: false,
     useQStashBackend: false,
@@ -62,4 +74,18 @@ export function isEmailConfigured() {
   return features.useEmailJS
     && emailjs.publicKey !== 'REEMPLAZAR_ESTO'
     && emailjs.serviceId !== 'REEMPLAZAR_ESTO';
+}
+
+export function isSupabaseConfigured() {
+  const { url, anonKey } = APP_CONFIG.supabase;
+  return url
+    && anonKey
+    && url !== 'REEMPLAZAR_SUPABASE_URL'
+    && anonKey !== 'REEMPLAZAR_SUPABASE_ANON_KEY'
+    && url.startsWith('http');
+}
+
+/** Usa mock solo si está forzado o si faltan las keys de Supabase */
+export function useLocalAvailability() {
+  return APP_CONFIG.features.useMockAvailability || !isSupabaseConfigured();
 }

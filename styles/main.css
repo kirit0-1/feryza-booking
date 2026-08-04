@@ -522,3 +522,172 @@ input, select, textarea {
     background: var(--accent-bg); border-color: var(--accent);
   }
 }
+
+/* ——— Footer público ——— */
+.app-footer {
+  text-align: center;
+  padding: 8px 20px calc(24px + env(safe-area-inset-bottom));
+}
+.app-footer-link {
+  font-size: .72rem;
+  color: var(--muted);
+  text-decoration: none;
+  opacity: .55;
+  transition: opacity var(--transition), color var(--transition);
+}
+.app-footer-link:hover { opacity: 1; color: var(--accent); }
+
+/* ——— Panel admin ——— */
+.admin-body .app-header-inner { max-width: 640px; }
+.admin-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 20px calc(48px + env(safe-area-inset-bottom));
+}
+.admin-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  margin-bottom: 6px;
+}
+.admin-sub {
+  color: var(--muted);
+  font-size: .9rem;
+  margin-bottom: 22px;
+}
+.admin-login, .admin-panel { animation: adminIn .35s ease; }
+@keyframes adminIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.admin-pin-form .field { margin-bottom: 18px; }
+.admin-pin-form .field > span:first-child {
+  display: block;
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.admin-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.admin-toolbar .admin-sub { margin-bottom: 0; }
+.admin-toolbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.admin-btn-sm {
+  padding: 10px 14px !important;
+  font-size: .82rem !important;
+  min-height: 40px !important;
+  width: auto !important;
+  position: static !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+.admin-config-warn {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-soft);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: .85rem;
+  color: var(--ink);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.admin-config-warn code {
+  font-family: var(--f-num);
+  font-size: .78rem;
+  color: var(--accent);
+}
+.admin-list { display: flex; flex-direction: column; gap: 28px; }
+.admin-day-title {
+  font-size: .82rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  color: var(--accent);
+  letter-spacing: .04em;
+  margin-bottom: 12px;
+}
+.admin-day-list { display: flex; flex-direction: column; gap: 12px; }
+.admin-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.admin-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.admin-time {
+  font-family: var(--f-num);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.admin-badge {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+.admin-badge--ok { background: var(--accent-soft); color: var(--accent); }
+.admin-badge--done { background: rgba(90, 158, 122, .2); color: #7ec49a; }
+.admin-badge--cancel { background: rgba(180, 90, 90, .2); color: #d98a8a; }
+.admin-card-service {
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.admin-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: .88rem;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.admin-meta-label {
+  display: inline-block;
+  min-width: 72px;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 600;
+}
+.admin-card-meta a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.admin-card-meta a:hover { text-decoration: underline; }
+.admin-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--muted);
+}
+.admin-empty-hint { font-size: .82rem; margin-top: 8px; opacity: .8; }
+.admin-loading { color: var(--muted); font-size: .9rem; padding: 12px 0; }
+.admin-login.hidden,
+.admin-panel.hidden,
+.admin-config-warn.hidden { display: none !important; }
+
+@media (max-width: 600px) {
+  .admin-main { padding: 20px max(16px, env(safe-area-inset-left)); }
+  .admin-toolbar { flex-direction: column; }
+  .admin-card-actions .btn-continue,
+  .admin-card-actions .btn-sec { flex: 1 1 auto; text-align: center; justify-content: center; }
+}

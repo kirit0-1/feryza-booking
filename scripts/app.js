@@ -289,6 +289,9 @@ async function confirmarReserva() {
       time: state.time,
       duration: state.service.dur,
       serviceId: state.service.id,
+      serviceName: state.service.name,
+      pago: state.pago.name,
+      total: state.service.price,
       cliente: { nombre: state.nombre, telefono: state.telefono, correo: state.correo },
     });
 
@@ -307,11 +310,17 @@ async function confirmarReserva() {
     goTo(6);
 
     if (!emailResult.sent) {
-      showToast('Reserva guardada. Te contactaremos por WhatsApp si hace falta.', 'info', 5000);
+      const msg = emailResult.reason === 'demo'
+        ? 'Reserva guardada. Revisa el panel del barbero; el correo se activa con EmailJS.'
+        : 'Reserva guardada. El correo no se envió; revisa el panel del barbero.';
+      showToast(msg, 'info', 6000);
     }
   } catch (err) {
     console.error('[app] Error al confirmar:', err);
-    showToast('No se pudo confirmar la reserva. Intenta otro horario.', 'error');
+    const msg = err?.code === 'SLOT_TAKEN'
+      ? err.message
+      : 'No se pudo confirmar la reserva. Intenta otro horario.';
+    showToast(msg, 'error');
     btn.disabled = false;
     btn.innerHTML = `Confirmar reserva <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>`;
     await refreshSlotsIfNeeded(state);
