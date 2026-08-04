@@ -31,9 +31,10 @@ App de reservas para **Feryza Barber**. Las citas se guardan en **Supabase** (vi
 1. Crea un proyecto en [supabase.com](https://supabase.com).
 2. En **SQL Editor**, pega y ejecuta el contenido de [`supabase/schema.sql`](supabase/schema.sql).
 3. En **Project Settings → API**, copia:
-   - **Project URL** → `APP_CONFIG.supabase.url` en [`scripts/config.js`](scripts/config.js)
-   - **anon public** key → `APP_CONFIG.supabase.anonKey`
-4. Deja `features.useMockAvailability: false` (ya viene así). Si faltan las keys, la app cae a `localStorage` solo en ese navegador.
+   - **Project URL** → `APP_CONFIG.supabase.url` en [`scripts/config.js`](scripts/config.js)  
+     *(aún pendiente: pega la URL real `https://XXXX.supabase.co` desde Dashboard → Settings → API → Project URL; la anon/publishable key ya está en el frontend)*
+   - **anon public** / publishable key → `APP_CONFIG.supabase.anonKey` (ya configurada)
+4. Deja `features.useMockAvailability: false` (ya viene así). Si falta la Project URL, la app cae a `localStorage` solo en ese navegador.
 
 ### 2. EmailJS (opcional en demo)
 
