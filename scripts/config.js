@@ -32,8 +32,8 @@ export const APP_CONFIG = {
 
   /** Pegar URL y anon key del proyecto Supabase */
   supabase: {
-    // Dashboard → Settings → API → Project URL (https://XXXX.supabase.co)
-    url: 'https://XXXX.supabase.co',
+    // Project URL (sin /rest/v1/)
+    url: 'https://zqbfmcvnnyygkfhfyrst.supabase.co',
     anonKey: 'sb_publishable_ExTIG9WL6It90s_XJzSF8A_cnGYS3oV',
   },
 
