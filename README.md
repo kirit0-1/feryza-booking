@@ -2,6 +2,8 @@
 
 App de reservas para **Feryza Barber**.
 
+**Demo:** https://kirit0-1.github.io/feryza-booking/
+
 ## Datos del negocio
 
 | Dato | Valor |
@@ -27,6 +29,6 @@ cd feryza-booking
 npx serve . -l 3001
 ```
 
-## GitHub Pages
+## Deploy
 
-URL: https://kirit0-1.github.io/feryza-booking/
+Push a `main` activa GitHub Pages automáticamente.
