@@ -1,10 +1,10 @@
 /**
- * config.js — Configuración Eryza Barber
+ * config.js — Configuración Feryza Barber
  */
 
 export const APP_CONFIG = {
-  name: 'Eryza Barber',
-  location: 'Eryza Barber, Chile',
+  name: 'Feryza Barber',
+  location: 'Feryza Barber, Chile',
   whatsapp: '56979608342',
   contactEmail: 'Fernandoisaias2606@gmail.com',
 
@@ -24,10 +24,10 @@ export const APP_CONFIG = {
   },
 
   storage: {
-    stateKey: 'eryza_booking_state',
+    stateKey: 'feryza_booking_state',
     stateVersion: 1,
     stateTtlMs: 30 * 60 * 1000,
-    bookingsKey: 'eryza_bookings',
+    bookingsKey: 'feryza_bookings',
   },
 
   features: {
@@ -50,7 +50,7 @@ export const APP_CONFIG = {
     scheduleReminder: '/api/schedule-reminder',
   },
 
-  publicUrl: 'https://kirit0-1.github.io/eryza-booking',
+  publicUrl: 'https://kirit0-1.github.io/feryza-booking',
 };
 
 export function getHoursForDay(dayOfWeek) {

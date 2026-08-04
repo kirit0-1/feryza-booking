@@ -1,5 +1,5 @@
 /**
- * icons.js — Iconos SVG Eryza Barber
+ * icons.js — Iconos SVG Feryza Barber
  */
 
 const SERVICE_ICONS = {

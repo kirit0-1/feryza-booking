@@ -1,5 +1,5 @@
 /**
- * app.js — Orquestador Eryza Barber
+ * app.js — Orquestador Feryza Barber
  */
 
 import { APP_CONFIG } from './config.js';

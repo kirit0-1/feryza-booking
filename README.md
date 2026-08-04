@@ -1,6 +1,6 @@
-# Eryza Barber — Reservas online
+# Feryza Barber — Reservas online
 
-App de reservas para **Eryza Barber**. Misma plataforma que Menfresh, personalizada para esta barbería.
+App de reservas para **Feryza Barber**.
 
 ## Datos del negocio
 
@@ -23,20 +23,10 @@ App de reservas para **Eryza Barber**. Misma plataforma que Menfresh, personaliz
 ## Local
 
 ```bash
-cd eryza-booking
+cd feryza-booking
 npx serve . -l 3001
 ```
 
-## Deploy GitHub Pages
+## GitHub Pages
 
-```bash
-cd eryza-booking
-git init -b main
-git add -A
-git commit -m "Eryza Barber booking app"
-gh repo create eryza-booking --public --source=. --remote=origin --push
-```
-
-Luego: Settings → Pages → Source: GitHub Actions.
-
-URL esperada: `https://kirit0-1.github.io/eryza-booking/`
+URL: https://kirit0-1.github.io/feryza-booking/

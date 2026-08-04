@@ -1,5 +1,5 @@
 /**
- * data.js — Catálogo Eryza Barber
+ * data.js — Catálogo Feryza Barber
  */
 
 export const SERVICES = [

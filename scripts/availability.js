@@ -1,5 +1,5 @@
 /**
- * availability.js — Motor de disponibilidad Eryza Barber
+ * availability.js — Motor de disponibilidad Feryza Barber
  * Intervalos fijos de 45 min + horarios por día de la semana.
  */
 

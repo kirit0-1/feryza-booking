@@ -1,5 +1,5 @@
 /**
- * email.js — Correos de confirmación Eryza Barber
+ * email.js — Correos de confirmación Feryza Barber
  */
 
 import { APP_CONFIG, isEmailConfigured } from './config.js';

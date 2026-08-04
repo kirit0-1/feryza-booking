@@ -1,5 +1,5 @@
 /**
- * calendar-url.js — Google Calendar URL (Eryza Barber)
+ * calendar-url.js — Google Calendar URL (Feryza Barber)
  */
 
 import { APP_CONFIG } from './config.js';
@@ -26,7 +26,7 @@ export function buildCalendarURL(bookingState) {
 
   const params = new URLSearchParams({
     action: 'TEMPLATE',
-    text: `Eryza Barber — ${service.name}`,
+    text: `Feryza Barber — ${service.name}`,
     details,
     location: APP_CONFIG.location,
     dates: `${formatGCalDate(start)}/${formatGCalDate(end)}`,

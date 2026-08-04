@@ -1,5 +1,5 @@
 /**
- * reminder.js — Recordatorio 2 horas antes (Eryza Barber)
+ * reminder.js — Recordatorio 2 horas antes (Feryza Barber)
  */
 
 import { APP_CONFIG } from './config.js';

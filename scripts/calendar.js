@@ -1,5 +1,5 @@
 /**
- * calendar.js — Calendario Eryza Barber (abre domingo con horario reducido)
+ * calendar.js — Calendario Feryza Barber (abre domingo con horario reducido)
  */
 
 import { APP_CONFIG } from './config.js';
