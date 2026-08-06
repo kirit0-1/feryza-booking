@@ -45,7 +45,7 @@ export const APP_CONFIG = {
   features: {
     /** false = usa Supabase cuando hay keys; true = localStorage mock */
     useMockAvailability: false,
-    useEmailJS: true,
+    useEmailJS: false,
     useResendBackend: false,
     useQStashBackend: false,
   },
@@ -65,6 +65,11 @@ export const APP_CONFIG = {
 
   publicUrl: 'https://kirit0-1.github.io/feryza-booking',
 };
+
+/** Mensaje WhatsApp al cancelar una cita desde el panel */
+export function buildCancelWhatsAppMessage(b) {
+  return `Hola ${b.cliente.nombre}, te escribimos de Feryza Barber. Lamentamos informarte que tu cita del ${b.fecha} a las ${b.time} (${b.serviceName}) fue cancelada. Si quieres reagendar, responde a este mensaje o reserva en ${APP_CONFIG.publicUrl}. ¡Gracias!`;
+}
 
 export function getHoursForDay(dayOfWeek) {
   return APP_CONFIG.businessHours.schedule[dayOfWeek] ?? null;

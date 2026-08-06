@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#9B8EC4">
+  <meta name="theme-color" content="#0A0A0A">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="Reserva tu hora en Feryza Barber. Corte, barba y membresía.">
   <title>Reservar hora — Feryza Barber</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles/main.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -88,7 +88,7 @@
 
       <div class="step-panel" id="step4">
         <h1 class="step-title">Tus datos</h1>
-        <p class="step-sub">Te enviaremos la confirmación por correo</p>
+        <p class="step-sub">Te contactamos por WhatsApp si hace falta</p>
         <div class="form-grid">
           <div class="field">
             <label for="nombre">Nombre completo</label>
@@ -96,12 +96,12 @@
             <span class="field-error" id="err-nombre"></span>
           </div>
           <div class="field">
-            <label for="telefono">Teléfono</label>
-            <input type="tel" id="telefono" placeholder="+56 9 1234 5678" autocomplete="tel">
+            <label for="telefono">WhatsApp / teléfono</label>
+            <input type="tel" id="telefono" placeholder="+56 9 1234 5678" autocomplete="tel" inputmode="tel">
             <span class="field-error" id="err-telefono"></span>
           </div>
           <div class="field">
-            <label for="correo">Correo electrónico</label>
+            <label for="correo">Correo <span class="label-optional">(opcional)</span></label>
             <input type="email" id="correo" placeholder="tu@correo.cl" autocomplete="email">
             <span class="field-error" id="err-correo"></span>
           </div>
@@ -114,8 +114,9 @@
 
       <div class="step-panel" id="step5">
         <h1 class="step-title">Método de pago</h1>
-        <p class="step-sub">Elige cómo prefieres pagar al llegar</p>
+        <p class="step-sub">Efectivo o transferencia</p>
         <div class="pago-grid" id="pago-list"></div>
+        <div class="bank-box hidden" id="bankBox" aria-live="polite"></div>
         <div class="divider"></div>
         <div class="summary-mobile" id="summaryMobile"></div>
         <button class="btn-continue" id="btn5" disabled>
@@ -130,9 +131,12 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
           <h1 class="confirm-title">¡Reserva confirmada!</h1>
-          <p class="confirm-sub">Te esperamos en Feryza Barber. Revisa tu correo o WhatsApp si hay novedades.</p>
+          <p class="confirm-sub">Te esperamos en Feryza Barber. Si necesitas algo, escríbenos por WhatsApp.</p>
           <div class="confirm-detail" id="confirmDetail"></div>
           <div class="confirm-actions">
+            <a class="btn-wa" id="confirmWa" href="#" target="_blank" rel="noopener noreferrer">
+              Escribir por WhatsApp
+            </a>
             <a class="btn-continue" id="calLink" href="#" target="_blank" rel="noopener noreferrer">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
               Agregar a Google Calendar
@@ -142,10 +146,6 @@
               Hacer otra reserva
             </button>
           </div>
-          <p class="email-notice">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
-            Confirmación enviada al cliente y al barbero
-          </p>
         </div>
       </div>
     </div>

@@ -36,7 +36,7 @@ export const BARBERS = [
     id: 'fernando',
     name: 'Fernando',
     tag: 'Barbero principal',
-    color: '#9B8EC4',
+    color: '#C9C4BC',
     letter: 'F',
     email: 'Fernandoisaias2606@gmail.com',
     isAssignable: true,
@@ -45,9 +45,18 @@ export const BARBERS = [
 
 export const PAYMENT_METHODS = [
   { id: 'efectivo', name: 'Efectivo', desc: 'Pagas al llegar al local', icon: 'cash' },
-  { id: 'transferencia', name: 'Transferencia', desc: 'Te enviamos los datos por correo', icon: 'transfer' },
-  { id: 'tarjeta', name: 'Tarjeta', desc: 'Débito o crédito en el local', icon: 'card' },
+  { id: 'transferencia', name: 'Transferencia', desc: 'Te mostramos los datos bancarios', icon: 'transfer' },
 ];
+
+/** Datos para pago por transferencia */
+export const BANK_DETAILS = {
+  nombre: 'Fernando MORALES',
+  rut: '22.034.081-3',
+  email: 'fernandoisaias2606@gmail.com',
+  tipoCuenta: 'Cuenta Corriente',
+  numero: '19830921118',
+  banco: 'Banco Falabella',
+};
 
 export function getRealBarberIds() {
   return BARBERS.filter((b) => b.isAssignable).map((b) => b.id);

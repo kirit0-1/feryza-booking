@@ -1,8 +1,8 @@
 /**
- * admin.js — Panel del barbero (PIN demo + gestión de citas)
+ * admin.js — Panel del barbero (PIN + WhatsApp cancelación)
  */
 
-import { APP_CONFIG, isSupabaseConfigured } from './config.js';
+import { APP_CONFIG, isSupabaseConfigured, buildCancelWhatsAppMessage } from './config.js';
 import {
   fetchUpcomingBookings,
   updateBookingStatus,
@@ -19,6 +19,9 @@ const configWarn = document.getElementById('configWarn');
 const pinForm = document.getElementById('pinForm');
 const pinInput = document.getElementById('adminPin');
 const pinError = document.getElementById('pinError');
+
+/** Citas en memoria para armar mensajes WA */
+let bookingsCache = [];
 
 function isLoggedIn() {
   return sessionStorage.getItem(SESSION_KEY) === '1';
@@ -62,10 +65,14 @@ function formatFechaLabel(iso) {
   return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} · ${label}`;
 }
 
-function whatsappUrl(phone) {
+function normalizePhone(phone) {
   const digits = String(phone).replace(/\D/g, '');
-  const normalized = digits.startsWith('56') ? digits : `56${digits.replace(/^0/, '')}`;
-  return `https://wa.me/${normalized}`;
+  return digits.startsWith('56') ? digits : `56${digits.replace(/^0/, '')}`;
+}
+
+function whatsappUrl(phone, text = '') {
+  const base = `https://wa.me/${normalizePhone(phone)}`;
+  return text ? `${base}?text=${encodeURIComponent(text)}` : base;
 }
 
 function statusBadge(status) {
@@ -88,6 +95,7 @@ function groupByFecha(bookings) {
 }
 
 function renderBookings(bookings) {
+  bookingsCache = bookings;
   const active = bookings.filter((b) => b.status === 'confirmed');
   const others = bookings.filter((b) => b.status !== 'confirmed');
   const ordered = [...active, ...others];
@@ -125,17 +133,15 @@ function renderBookings(bookings) {
           <div class="admin-card-service">${escapeHtml(b.serviceName)}</div>
           <div class="admin-card-meta">
             <div><span class="admin-meta-label">Cliente</span> ${escapeHtml(b.cliente.nombre)}</div>
-            <div><span class="admin-meta-label">Teléfono</span>
-              <a href="${whatsappUrl(b.cliente.telefono)}" target="_blank" rel="noopener noreferrer">${escapeHtml(b.cliente.telefono)}</a>
-            </div>
-            <div><span class="admin-meta-label">Correo</span> ${escapeHtml(b.cliente.correo)}</div>
+            <div><span class="admin-meta-label">Teléfono</span> ${escapeHtml(b.cliente.telefono)}</div>
             <div><span class="admin-meta-label">Pago</span> ${escapeHtml(b.pago)} · ${formatPrice(b.total)}</div>
           </div>
           ${canAct ? `
             <div class="admin-card-actions">
               <button type="button" class="btn-continue admin-btn-sm" data-action="complete" data-id="${escapeHtml(b.id)}">Completada</button>
-              <button type="button" class="btn-sec admin-btn-sm" data-action="cancel" data-id="${escapeHtml(b.id)}">Cancelar</button>
-              <a class="btn-sec admin-btn-sm admin-wa" href="${whatsappUrl(b.cliente.telefono)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+              <button type="button" class="btn-wa-cancel admin-btn-sm" data-action="cancel-wa" data-id="${escapeHtml(b.id)}">
+                Cancelar por WhatsApp
+              </button>
             </div>
           ` : `
             <div class="admin-card-actions">
@@ -189,6 +195,22 @@ async function handleStatusChange(id, status) {
   }
 }
 
+async function cancelViaWhatsApp(id) {
+  const booking = bookingsCache.find((b) => b.id === id);
+  if (!booking) {
+    showToast('No se encontró la cita', 'error');
+    return;
+  }
+
+  if (!confirm('Se abrirá WhatsApp con el mensaje de cancelación y la cita quedará libre. ¿Continuar?')) {
+    return;
+  }
+
+  const msg = buildCancelWhatsAppMessage(booking);
+  window.open(whatsappUrl(booking.cliente.telefono, msg), '_blank', 'noopener,noreferrer');
+  await handleStatusChange(id, 'cancelled');
+}
+
 pinForm.addEventListener('submit', (e) => {
   e.preventDefault();
   pinError.textContent = '';
@@ -221,11 +243,7 @@ listEl.addEventListener('click', (e) => {
   if (!id) return;
 
   if (action === 'complete') handleStatusChange(id, 'completed');
-  if (action === 'cancel') {
-    if (confirm('¿Cancelar esta cita? El horario quedará libre.')) {
-      handleStatusChange(id, 'cancelled');
-    }
-  }
+  if (action === 'cancel-wa') cancelViaWhatsApp(id);
 });
 
 if (isLoggedIn()) showPanel();

@@ -3,11 +3,10 @@
  */
 
 import { APP_CONFIG } from './config.js';
-import { SERVICES, BARBERS, PAYMENT_METHODS } from './data.js';
+import { SERVICES, BARBERS, PAYMENT_METHODS, BANK_DETAILS } from './data.js';
 import { state, saveState, clearStorage, restoreState, resetState } from './state.js';
 import { initCalendar, renderCalendar, renderSlots, refreshSlotsIfNeeded, resetCalendarView } from './calendar.js';
 import { buildCalendarURL } from './calendar-url.js';
-import { sendEmails, initEmailJS } from './email.js';
 import { scheduleReminder } from './reminder.js';
 import { saveBooking, getBarberNameById } from './availability.js';
 import { getServiceIcon, SUMMARY_ICONS, PAGO_ICONS } from './icons.js';
@@ -24,8 +23,8 @@ const STEPS = [
   { label: 'Pago' },
 ];
 
-const ACCENT = '#9B8EC4';
-const MUTED_RING = '#3A3545';
+const ACCENT = '#C9C4BC';
+const MUTED_RING = '#2A2A2A';
 
 function renderProgress(active) {
   const track = document.getElementById('progressTrack');
@@ -194,8 +193,13 @@ function initDatos() {
 
     const fields = [
       { id: 'nombre', err: 'err-nombre', msg: 'Ingresa tu nombre', check: () => !!nombre },
-      { id: 'telefono', err: 'err-telefono', msg: 'Ingresa un teléfono válido', check: () => isValidChilePhone(telefono) },
-      { id: 'correo', err: 'err-correo', msg: 'Ingresa un correo válido', check: () => isValidEmail(correo) },
+      { id: 'telefono', err: 'err-telefono', msg: 'Ingresa un WhatsApp válido', check: () => isValidChilePhone(telefono) },
+      {
+        id: 'correo',
+        err: 'err-correo',
+        msg: 'Correo no válido',
+        check: () => !correo || isValidEmail(correo),
+      },
     ];
 
     fields.forEach(({ id, err, msg, check }) => {
@@ -212,9 +216,32 @@ function initDatos() {
 
     state.nombre = nombre;
     state.telefono = telefono;
-    state.correo = correo;
+    state.correo = correo || '';
     goTo(5);
   });
+}
+
+function renderBankBox(show) {
+  const box = document.getElementById('bankBox');
+  if (!show) {
+    box.classList.add('hidden');
+    box.innerHTML = '';
+    return;
+  }
+
+  const b = BANK_DETAILS;
+  box.classList.remove('hidden');
+  box.innerHTML = `
+    <div class="bank-box-title">Datos para transferir</div>
+    <dl class="bank-rows">
+      <div><dt>Nombre</dt><dd>${escapeHtml(b.nombre)}</dd></div>
+      <div><dt>RUT</dt><dd>${escapeHtml(b.rut)}</dd></div>
+      <div><dt>Email</dt><dd>${escapeHtml(b.email)}</dd></div>
+      <div><dt>Tipo</dt><dd>${escapeHtml(b.tipoCuenta)}</dd></div>
+      <div><dt>Nº cuenta</dt><dd class="bank-num">${escapeHtml(b.numero)}</dd></div>
+      <div><dt>Banco</dt><dd>${escapeHtml(b.banco)}</dd></div>
+    </dl>
+  `;
 }
 
 function renderPago() {
@@ -223,6 +250,7 @@ function renderPago() {
 
   PAYMENT_METHODS.forEach((pm) => {
     const btn = document.createElement('button');
+    btn.type = 'button';
     btn.className = 'pago-card';
     btn.innerHTML = `
       <div class="pago-icon">${PAGO_ICONS[pm.icon]}</div>
@@ -237,6 +265,7 @@ function renderPago() {
       btn.classList.add('selected');
       state.pago = pm;
       document.getElementById('btn5').disabled = false;
+      renderBankBox(pm.id === 'transferencia');
       updateSummary();
       saveState();
     });
@@ -292,29 +321,20 @@ async function confirmarReserva() {
       serviceName: state.service.name,
       pago: state.pago.name,
       total: state.service.price,
-      cliente: { nombre: state.nombre, telefono: state.telefono, correo: state.correo },
+      cliente: { nombre: state.nombre, telefono: state.telefono, correo: state.correo || '' },
     });
 
     if (state.barber.id === 'any') {
       state.assignedBarberName = getBarberNameById(saved.barberId);
     }
 
-    const [emailResult] = await Promise.all([
-      sendEmails(state),
-      scheduleReminder(state),
-    ]);
+    await scheduleReminder(state).catch(() => {});
 
     document.getElementById('calLink').href = buildCalendarURL(state);
     renderConfirmation();
     clearStorage();
     goTo(6);
-
-    if (!emailResult.sent) {
-      const msg = emailResult.reason === 'demo'
-        ? 'Reserva guardada. Revisa el panel del barbero; el correo se activa con EmailJS.'
-        : 'Reserva guardada. El correo no se envió; revisa el panel del barbero.';
-      showToast(msg, 'info', 6000);
-    }
+    showToast('Reserva confirmada', 'success');
   } catch (err) {
     console.error('[app] Error al confirmar:', err);
     const msg = err?.code === 'SLOT_TAKEN'
@@ -327,11 +347,33 @@ async function confirmarReserva() {
   }
 }
 
+function buildConfirmWhatsAppUrl() {
+  const { service, date, time, pago, nombre } = state;
+  const text = `Hola, soy ${nombre}. Acabo de reservar ${service.name} el ${formatDateLong(date)} a las ${time}. Pago: ${pago.name}.`;
+  return `https://wa.me/${APP_CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
+}
+
 function renderConfirmation() {
   const { service, barber, date, time, pago } = state;
   const barberDisplay = state.assignedBarberName
     ? `${barber.name} (${state.assignedBarberName})`
     : barber.name;
+
+  document.getElementById('confirmWa').href = buildConfirmWhatsAppUrl();
+
+  let extra = '';
+  if (pago.id === 'transferencia') {
+    const b = BANK_DETAILS;
+    extra = `
+      <div class="confirm-bank">
+        <div class="bank-box-title">Transferencia</div>
+        <div class="confirm-row"><span>Nombre</span><span>${escapeHtml(b.nombre)}</span></div>
+        <div class="confirm-row"><span>RUT</span><span>${escapeHtml(b.rut)}</span></div>
+        <div class="confirm-row"><span>Cuenta</span><span>${escapeHtml(b.numero)}</span></div>
+        <div class="confirm-row"><span>Banco</span><span>${escapeHtml(b.banco)}</span></div>
+      </div>
+    `;
+  }
 
   document.getElementById('confirmDetail').innerHTML = `
     <div class="confirm-row"><span>Servicio</span><span>${escapeHtml(service.name)}</span></div>
@@ -341,6 +383,7 @@ function renderConfirmation() {
     <div class="confirm-row"><span>Duración</span><span>${service.dur} min</span></div>
     <div class="confirm-row"><span>Pago</span><span>${escapeHtml(pago.name)}</span></div>
     <div class="confirm-row"><span>Total</span><span class="confirm-total">${formatPrice(service.price)}</span></div>
+    ${extra}
   `;
 }
 
@@ -363,6 +406,7 @@ async function restoreUISelections() {
     const idx = PAYMENT_METHODS.findIndex((p) => p.id === state.pago.id);
     document.querySelectorAll('#pago-list .pago-card')[idx]?.classList.add('selected');
     document.getElementById('btn5').disabled = false;
+    renderBankBox(state.pago.id === 'transferencia');
   }
   if (state.date) {
     renderCalendar(state);
@@ -386,6 +430,7 @@ function resetBooking() {
   document.getElementById('btn1').disabled = true;
   document.getElementById('btn2').disabled = true;
   document.getElementById('btn5').disabled = true;
+  renderBankBox(false);
 
   resetCalendarView(state);
   goTo(1);
@@ -394,7 +439,6 @@ function resetBooking() {
 function init() {
   document.getElementById('whatsappFab').href = `https://wa.me/${APP_CONFIG.whatsapp}`;
 
-  initEmailJS();
   renderServicios();
   renderBarberos();
   renderPago();
