@@ -2,7 +2,7 @@
 -- Instalación nueva: ejecutar este archivo completo.
 -- Proyecto ya en marcha: ejecutar supabase/hardening.sql (no borra citas).
 
-create extension if not exists "pgcrypto";
+create extension if not exists pgcrypto;
 
 create table if not exists public.bookings (
   id uuid primary key default gen_random_uuid(),
@@ -40,7 +40,7 @@ create table if not exists public.admin_settings (
 );
 
 insert into public.admin_settings (id, pin_hash)
-values (1, crypt('feryza2026', gen_salt('bf')))
+values (1, extensions.crypt('feryza2026', extensions.gen_salt('bf')))
 on conflict (id) do nothing;
 
 alter table public.admin_settings enable row level security;
@@ -50,13 +50,13 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select exists (
     select 1
     from public.admin_settings
     where id = 1
-      and pin_hash = crypt(p_pin, pin_hash)
+      and pin_hash = extensions.crypt(p_pin, pin_hash)
   );
 $$;
 
@@ -65,7 +65,7 @@ returns boolean
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select public._admin_pin_ok(p_pin);
 $$;
@@ -82,7 +82,7 @@ returns table (
 language sql
 stable
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select b.id, b.barber_id, b.fecha, b."time", b.duration, b.status
   from public.bookings b
@@ -107,7 +107,7 @@ create or replace function public.create_booking(
 returns json
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   new_id uuid;
@@ -146,7 +146,7 @@ create or replace function public.purge_old_bookings()
 returns void
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   delete from public.bookings
   where fecha < current_date
@@ -157,7 +157,7 @@ create or replace function public.admin_list_bookings(p_pin text, p_from date, p
 returns setof public.bookings
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if not public._admin_pin_ok(p_pin) then
@@ -179,7 +179,7 @@ create or replace function public.admin_update_status(p_pin text, p_id uuid, p_s
 returns public.bookings
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   updated public.bookings;
