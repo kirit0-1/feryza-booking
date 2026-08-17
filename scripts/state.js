@@ -18,6 +18,7 @@ export function createInitialState() {
     telefono: '',
     correo: '',
     pago: null,
+    addBarba: false,
   };
 }
 
@@ -38,6 +39,7 @@ export function saveState() {
     telefono: state.telefono,
     correo: state.correo,
     pagoId: state.pago?.id ?? null,
+    addBarba: !!state.addBarba,
   };
 
   localStorage.setItem(stateKey, JSON.stringify(payload));
@@ -73,6 +75,7 @@ export function restoreState() {
     state.telefono = saved.telefono ?? '';
     state.correo = saved.correo ?? '';
     state.pago = saved.pagoId ? findPaymentById(saved.pagoId) : null;
+    state.addBarba = !!saved.addBarba && !!state.service?.allowBarbaAddon;
 
     return true;
   } catch {

@@ -25,7 +25,7 @@ export const APP_CONFIG = {
 
   storage: {
     stateKey: 'feryza_booking_state',
-    stateVersion: 1,
+    stateVersion: 2,
     stateTtlMs: 30 * 60 * 1000,
     bookingsKey: 'feryza_bookings',
   },
@@ -37,7 +37,10 @@ export const APP_CONFIG = {
     anonKey: 'sb_publishable_ExTIG9WL6It90s_XJzSF8A_cnGYS3oV',
   },
 
-  /** PIN del panel del barbero (demo) */
+  /**
+   * PIN de respaldo SOLO si aún no corriste supabase/hardening.sql.
+   * Después del SQL, el PIN se valida en Supabase (no en el HTML).
+   */
   admin: {
     pin: 'feryza2026',
   },

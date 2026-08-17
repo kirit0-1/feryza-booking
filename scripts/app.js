@@ -3,7 +3,7 @@
  */
 
 import { APP_CONFIG } from './config.js';
-import { SERVICES, BARBERS, PAYMENT_METHODS, BANK_DETAILS } from './data.js';
+import { SERVICES, BARBERS, PAYMENT_METHODS, BANK_DETAILS, BARBA_ADDON_PRICE, getActiveService } from './data.js';
 import { state, saveState, clearStorage, restoreState, resetState } from './state.js';
 import { initCalendar, renderCalendar, renderSlots, refreshSlotsIfNeeded, resetCalendarView } from './calendar.js';
 import { buildCalendarURL } from './calendar-url.js';
@@ -23,8 +23,8 @@ const STEPS = [
   { label: 'Pago' },
 ];
 
-const ACCENT = '#C9C4BC';
-const MUTED_RING = '#2A2A2A';
+const ACCENT = '#E5ACFF';
+const MUTED_RING = '#3A2A4A';
 
 function renderProgress(active) {
   const track = document.getElementById('progressTrack');
@@ -46,7 +46,7 @@ function renderProgress(active) {
           <circle cx="16" cy="16" r="9" stroke="${innerStroke}" stroke-width="1.6" opacity="${isDone || isActive ? 1 : 0.4}"/>
           ${isDone
             ? `<path d="M10 16l4 4 8-8" stroke="${ACCENT}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
-            : `<text x="16" y="20" text-anchor="middle" font-family="DM Sans,sans-serif" font-weight="700" font-size="10" fill="${isActive ? ACCENT : '#9A95A3'}">${stepNum}</text>`
+            : `<text x="16" y="20" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="10" fill="${isActive ? ACCENT : '#A898B8'}">${stepNum}</text>`
           }
         </svg>
       </div>
@@ -81,21 +81,22 @@ function updateWhatsAppFab(step) {
 function updateMobileSummaryBar() {
   const bar = document.getElementById('mobileSummaryBar');
   const step = state.currentStep;
-  const show = step >= 2 && step <= 5 && state.service;
+  const active = getActiveService(state.service, state.addBarba);
+  const show = step >= 2 && step <= 5 && active;
 
   if (!show) {
     bar.classList.add('hidden');
     return;
   }
 
-  const parts = [state.service.name];
+  const parts = [active.name];
   if (state.barber) parts.push(state.barber.name);
   if (state.time) parts.push(state.time);
 
   bar.classList.remove('hidden');
   bar.innerHTML = `
     <span class="mobile-summary-text">${escapeHtml(parts.join(' · '))}</span>
-    <span class="mobile-summary-price">${formatPrice(state.service.price)}</span>
+    <span class="mobile-summary-price">${formatPrice(active.price)}</span>
   `;
 }
 
@@ -106,9 +107,14 @@ function renderServicios() {
   SERVICES.forEach((svc) => {
     const btn = document.createElement('button');
     const badge = svc.id === 'membresia-4'
-      ? '<span class="sel-card-badge">Membresía</span>'
+      ? '<span class="sel-card-badge">Ahorro</span>'
       : (svc.featured ? '<span class="sel-card-badge">Más pedido</span>' : '');
 
+    const includes = (svc.includes ?? [])
+      .map((item) => `<li>${escapeHtml(item)}</li>`)
+      .join('');
+
+    btn.type = 'button';
     btn.className = `sel-card${svc.featured || svc.id === 'membresia-4' ? ' sel-card--featured' : ''}`;
     btn.dataset.id = svc.id;
     btn.innerHTML = `
@@ -121,17 +127,22 @@ function renderServicios() {
         <div class="sel-card-meta">${formatPrice(svc.price)}</div>
         <div class="sel-card-check"></div>
       </div>
+      <ul class="sel-card-includes">${includes}</ul>
       ${badge}
     `;
     btn.addEventListener('click', () => {
       list.querySelectorAll('.sel-card').forEach((c) => c.classList.remove('selected'));
       btn.classList.add('selected');
       state.service = svc;
+      if (!svc.allowBarbaAddon) state.addBarba = false;
       document.getElementById('btn1').disabled = false;
+      renderBarbaAddon();
       saveState();
     });
     list.appendChild(btn);
   });
+
+  renderBarbaAddon();
 
   document.getElementById('btn1').addEventListener('click', () => {
     if (!state.service) return;
@@ -141,6 +152,33 @@ function renderServicios() {
     } else {
       goTo(2);
     }
+  });
+}
+
+function renderBarbaAddon() {
+  const wrap = document.getElementById('barbaAddon');
+  if (!wrap) return;
+
+  const show = state.service?.allowBarbaAddon;
+  wrap.classList.toggle('hidden', !show);
+  if (!show) return;
+
+  wrap.innerHTML = `
+    <button type="button" class="addon-card${state.addBarba ? ' selected' : ''}" id="btnAddBarba">
+      <div class="addon-copy">
+        <div class="addon-title">¿Sumas la barba?</div>
+        <div class="addon-desc">Perfilado en el mismo turno de 45 min · +${formatPrice(BARBA_ADDON_PRICE)}</div>
+      </div>
+      <div class="addon-price">${state.addBarba ? 'Agregada' : 'Agregar'}</div>
+    </button>
+  `;
+
+  document.getElementById('btnAddBarba').addEventListener('click', (e) => {
+    e.preventDefault();
+    state.addBarba = !state.addBarba;
+    renderBarbaAddon();
+    updateSummary();
+    saveState();
   });
 }
 
@@ -156,7 +194,7 @@ function renderBarberos() {
       <div class="barber-avatar">
         <svg viewBox="0 0 60 60" fill="none">
           <circle cx="30" cy="30" r="30" fill="${b.color}33"/>
-          <text x="30" y="37" text-anchor="middle" font-family="DM Sans,sans-serif" font-weight="700" font-size="20" fill="${b.color}">${b.letter}</text>
+          <text x="30" y="37" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="20" fill="${b.color}">${b.letter}</text>
         </svg>
       </div>
       <div class="barber-name">${escapeHtml(b.name)}</div>
@@ -278,8 +316,9 @@ function renderPago() {
 }
 
 function buildSummaryRows() {
+  const active = getActiveService(state.service, state.addBarba);
   const rows = [
-    { icon: SUMMARY_ICONS.scissors, label: 'Servicio', val: state.service?.name, num: state.service ? formatPrice(state.service.price) : null },
+    { icon: SUMMARY_ICONS.scissors, label: 'Servicio', val: active?.name, num: active ? formatPrice(active.price) : null },
     { icon: SUMMARY_ICONS.person, label: 'Barbero', val: state.barber?.name },
     { icon: SUMMARY_ICONS.cal, label: 'Fecha', val: formatDateShort(state.date) },
     { icon: SUMMARY_ICONS.clock, label: 'Hora', val: state.time },
@@ -312,15 +351,16 @@ async function confirmarReserva() {
   btn.textContent = 'Confirmando…';
 
   try {
+    const active = getActiveService(state.service, state.addBarba);
     const saved = await saveBooking({
       barberId: state.barber.id,
       fecha: toISODate(state.date),
       time: state.time,
-      duration: state.service.dur,
-      serviceId: state.service.id,
-      serviceName: state.service.name,
+      duration: active.dur,
+      serviceId: active.id,
+      serviceName: active.name,
       pago: state.pago.name,
-      total: state.service.price,
+      total: active.price,
       cliente: { nombre: state.nombre, telefono: state.telefono, correo: state.correo || '' },
     });
 
@@ -348,13 +388,15 @@ async function confirmarReserva() {
 }
 
 function buildConfirmWhatsAppUrl() {
-  const { service, date, time, pago, nombre } = state;
-  const text = `Hola, soy ${nombre}. Acabo de reservar ${service.name} el ${formatDateLong(date)} a las ${time}. Pago: ${pago.name}.`;
+  const active = getActiveService(state.service, state.addBarba);
+  const { date, time, pago, nombre } = state;
+  const text = `Hola, soy ${nombre}. Acabo de reservar ${active.name} el ${formatDateLong(date)} a las ${time}. Pago: ${pago.name}.`;
   return `https://wa.me/${APP_CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
 }
 
 function renderConfirmation() {
-  const { service, barber, date, time, pago } = state;
+  const active = getActiveService(state.service, state.addBarba);
+  const { barber, date, time, pago } = state;
   const barberDisplay = state.assignedBarberName
     ? `${barber.name} (${state.assignedBarberName})`
     : barber.name;
@@ -376,13 +418,13 @@ function renderConfirmation() {
   }
 
   document.getElementById('confirmDetail').innerHTML = `
-    <div class="confirm-row"><span>Servicio</span><span>${escapeHtml(service.name)}</span></div>
+    <div class="confirm-row"><span>Servicio</span><span>${escapeHtml(active.name)}</span></div>
     <div class="confirm-row"><span>Barbero</span><span>${escapeHtml(barberDisplay)}</span></div>
     <div class="confirm-row"><span>Fecha</span><span>${escapeHtml(formatDateLong(date))}</span></div>
     <div class="confirm-row"><span>Hora</span><span>${escapeHtml(time)}</span></div>
-    <div class="confirm-row"><span>Duración</span><span>${service.dur} min</span></div>
+    <div class="confirm-row"><span>Duración</span><span>${active.dur} min</span></div>
     <div class="confirm-row"><span>Pago</span><span>${escapeHtml(pago.name)}</span></div>
-    <div class="confirm-row"><span>Total</span><span class="confirm-total">${formatPrice(service.price)}</span></div>
+    <div class="confirm-row"><span>Total</span><span class="confirm-total">${formatPrice(active.price)}</span></div>
     ${extra}
   `;
 }
@@ -397,6 +439,7 @@ async function restoreUISelections() {
   if (state.service) {
     document.querySelector(`#servicios-list [data-id="${state.service.id}"]`)?.classList.add('selected');
     document.getElementById('btn1').disabled = false;
+    renderBarbaAddon();
   }
   if (state.barber) {
     document.querySelector(`#barberos-list [data-id="${state.barber.id}"]`)?.classList.add('selected');
@@ -421,6 +464,7 @@ function resetBooking() {
   clearStorage();
   resetState();
   state.assignedBarberName = undefined;
+  state.addBarba = false;
   if (BARBERS.length === 1) state.barber = BARBERS[0];
 
   document.querySelectorAll('.sel-card, .barber-card, .pago-card').forEach((c) => c.classList.remove('selected'));
@@ -431,6 +475,7 @@ function resetBooking() {
   document.getElementById('btn2').disabled = true;
   document.getElementById('btn5').disabled = true;
   renderBankBox(false);
+  renderBarbaAddon();
 
   resetCalendarView(state);
   goTo(1);

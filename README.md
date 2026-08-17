@@ -21,7 +21,7 @@ App de reservas para **Feryza Barber**. Las citas se guardan en **Supabase** (vi
 | Servicio | Precio | Duración |
 |----------|--------|----------|
 | El corte | $7.000 | 45 min |
-| La barba | $2.000 | 45 min |
+| Perfilado de barba | $3.000 | 45 min |
 | Membresía 4 cortes / mes | $22.000 | 45 min |
 
 ## Setup (checklist)

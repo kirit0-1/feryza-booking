@@ -2,32 +2,55 @@
  * data.js — Catálogo Feryza Barber
  */
 
+export const BARBA_ADDON_PRICE = 3000;
+
 export const SERVICES = [
   {
     id: 'corte',
-    name: 'El corte',
-    desc: 'Corte de cabello completo',
+    name: 'Corte clásico',
+    desc: 'El corte de siempre, a máquina y tijera.',
+    includes: [
+      'Consulta rápida del estilo',
+      'Lavado',
+      'Corte a máquina y tijera',
+      'Peinado con producto',
+    ],
     price: 7000,
     dur: 45,
     icon: 'corte',
     featured: true,
+    allowBarbaAddon: true,
   },
   {
     id: 'barba',
-    name: 'La barba',
-    desc: 'Arreglo y perfilado de barba',
-    price: 2000,
+    name: 'Perfilado de barba',
+    desc: 'Contornos limpios y barba ordenada.',
+    includes: [
+      'Diseño de contornos',
+      'Recorte y simetría',
+      'Navaja en cuello y mejillas',
+      'Bálsamo al terminar',
+    ],
+    price: 3000,
     dur: 45,
     icon: 'barba',
+    allowBarbaAddon: false,
   },
   {
     id: 'membresia-4',
     name: 'Membresía 4 cortes',
-    desc: '4 cortes en 1 mes',
+    desc: '4 cortes en 30 días. Ahorras $6.000.',
+    includes: [
+      '4 visitas de corte clásico',
+      'Lavado y peinado en cada una',
+      'Válida 30 días desde la compra',
+      'La barba se puede sumar en cada visita',
+    ],
     price: 22000,
     dur: 45,
     icon: 'membresia',
     featured: false,
+    allowBarbaAddon: true,
   },
 ];
 
@@ -36,7 +59,7 @@ export const BARBERS = [
     id: 'fernando',
     name: 'Fernando',
     tag: 'Barbero principal',
-    color: '#C9C4BC',
+    color: '#E5ACFF',
     letter: 'F',
     email: 'Fernandoisaias2606@gmail.com',
     isAssignable: true,
@@ -48,7 +71,6 @@ export const PAYMENT_METHODS = [
   { id: 'transferencia', name: 'Transferencia', desc: 'Te mostramos los datos bancarios', icon: 'transfer' },
 ];
 
-/** Datos para pago por transferencia */
 export const BANK_DETAILS = {
   nombre: 'Fernando MORALES',
   rut: '22.034.081-3',
@@ -76,4 +98,18 @@ export function findBarberById(id) {
 
 export function findPaymentById(id) {
   return PAYMENT_METHODS.find((p) => p.id === id) ?? null;
+}
+
+/** Servicio efectivo (corte/membresía + barba si aplica) */
+export function getActiveService(service, addBarba) {
+  if (!service) return null;
+  if (!addBarba || !service.allowBarbaAddon) return service;
+  return {
+    ...service,
+    id: `${service.id}-barba`,
+    name: `${service.name} + barba`,
+    desc: `${service.desc} Incluye perfilado de barba.`,
+    price: service.price + BARBA_ADDON_PRICE,
+    includes: [...(service.includes ?? []), 'Perfilado de barba en el mismo turno'],
+  };
 }

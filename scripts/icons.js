@@ -1,12 +1,12 @@
 /**
- * icons.js — Iconos SVG Feryza Barber (acento acero)
+ * icons.js — Iconos SVG Feryza Barber
  */
 
 const SERVICE_ICONS = {
-  corte: `<svg class="sel-card-icon" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="18" fill="#1A1A1A"/><circle cx="7" cy="11" r="3" stroke="#C9C4BC" stroke-width="1.4"/><circle cx="7" cy="27" r="3" stroke="#C9C4BC" stroke-width="1.4"/><path d="M9.5 13.5L30 28M30 10L9.5 24.5" stroke="#F5F5F5" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-  barba: `<svg class="sel-card-icon" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="18" fill="#1A1A1A"/><path d="M8 19c0-6 4-11 11-11s11 5 11 11c0 4-11 14-11 14S8 23 8 19z" stroke="#F5F5F5" stroke-width="1.4" fill="none"/><path d="M13 23c2-3 4-4 6-4s4 1 6 4" stroke="#C9C4BC" stroke-width="1.6" stroke-linecap="round"/></svg>`,
-  membresia: `<svg class="sel-card-icon" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="18" fill="#1A1A1A"/><rect x="8" y="12" width="22" height="14" rx="2" stroke="#F5F5F5" stroke-width="1.4"/><path d="M8 17h22" stroke="#C9C4BC" stroke-width="1.6"/><circle cx="14" cy="22" r="1.5" fill="#C9C4BC"/></svg>`,
-  default: `<svg class="sel-card-icon" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="18" fill="#1A1A1A"/><circle cx="19" cy="15" r="6" stroke="#F5F5F5" stroke-width="1.4"/><path d="M10 28c0-5 4-8 9-8s9 3 9 8" stroke="#C9C4BC" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  corte: `<svg class="sel-card-icon" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="18" fill="#370D5E"/><circle cx="7" cy="11" r="3" stroke="#E5ACFF" stroke-width="1.4"/><circle cx="7" cy="27" r="3" stroke="#E5ACFF" stroke-width="1.4"/><path d="M9.5 13.5L30 28M30 10L9.5 24.5" stroke="#F4ECFA" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  barba: `<svg class="sel-card-icon" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="18" fill="#370D5E"/><path d="M8 19c0-6 4-11 11-11s11 5 11 11c0 4-11 14-11 14S8 23 8 19z" stroke="#F4ECFA" stroke-width="1.4" fill="none"/><path d="M13 23c2-3 4-4 6-4s4 1 6 4" stroke="#E5ACFF" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+  membresia: `<svg class="sel-card-icon" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="18" fill="#370D5E"/><rect x="8" y="12" width="22" height="14" rx="2" stroke="#F4ECFA" stroke-width="1.4"/><path d="M8 17h22" stroke="#E5ACFF" stroke-width="1.6"/><circle cx="14" cy="22" r="1.5" fill="#E5ACFF"/></svg>`,
+  default: `<svg class="sel-card-icon" viewBox="0 0 38 38" fill="none"><circle cx="19" cy="19" r="18" fill="#370D5E"/><circle cx="19" cy="15" r="6" stroke="#F4ECFA" stroke-width="1.4"/><path d="M10 28c0-5 4-8 9-8s9 3 9 8" stroke="#E5ACFF" stroke-width="1.6" stroke-linecap="round"/></svg>`,
 };
 
 export const SUMMARY_ICONS = {
@@ -18,8 +18,8 @@ export const SUMMARY_ICONS = {
 };
 
 export const PAGO_ICONS = {
-  cash: `<svg viewBox="0 0 24 24" fill="none" stroke="#C9C4BC" stroke-width="1.6"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="14" r="2"/></svg>`,
-  transfer: `<svg viewBox="0 0 24 24" fill="none" stroke="#C9C4BC" stroke-width="1.6"><path d="M18 8l4-4-4-4M2 12h20M6 20l-4-4 4-4M22 12H2"/></svg>`,
+  cash: `<svg viewBox="0 0 24 24" fill="none" stroke="#E5ACFF" stroke-width="1.6"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="14" r="2"/></svg>`,
+  transfer: `<svg viewBox="0 0 24 24" fill="none" stroke="#E5ACFF" stroke-width="1.6"><path d="M18 8l4-4-4-4M2 12h20M6 20l-4-4 4-4M22 12H2"/></svg>`,
 };
 
 export function getServiceIcon(service) {

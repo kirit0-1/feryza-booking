@@ -1,15 +1,21 @@
 /**
- * admin.js — Panel del barbero (PIN + WhatsApp cancelación)
+ * admin.js — Agenda del barbero (calendario día/semana + WhatsApp)
  */
 
 import { APP_CONFIG, isSupabaseConfigured, buildCancelWhatsAppMessage } from './config.js';
 import {
-  fetchUpcomingBookings,
+  fetchAdminBookings,
   updateBookingStatus,
+  verifyAdminPin,
+  isHardeningReady,
 } from './supabase.js';
 import { formatPrice, escapeHtml, showToast } from './utils.js';
 
-const SESSION_KEY = 'feryza_admin_ok';
+const SESSION_PIN_KEY = 'feryza_admin_pin';
+const SLOT_PX = 52;
+const GRID_START = 10 * 60;
+const GRID_END = 21 * 60;
+const INTERVAL = APP_CONFIG.businessHours.slotInterval;
 
 const loginEl = document.getElementById('adminLogin');
 const panelEl = document.getElementById('adminPanel');
@@ -19,22 +25,57 @@ const configWarn = document.getElementById('configWarn');
 const pinForm = document.getElementById('pinForm');
 const pinInput = document.getElementById('adminPin');
 const pinError = document.getElementById('pinError');
+const calLabel = document.getElementById('adminCalLabel');
+const sheetEl = document.getElementById('adminSheet');
+const sheetBody = document.getElementById('sheetBody');
 
-/** Citas en memoria para armar mensajes WA */
 let bookingsCache = [];
+let viewMode = window.innerWidth < 800 ? 'day' : 'week';
+let cursor = startOfDay(new Date());
 
-function isLoggedIn() {
-  return sessionStorage.getItem(SESSION_KEY) === '1';
+function startOfDay(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
-function setLoggedIn(ok) {
-  if (ok) sessionStorage.setItem(SESSION_KEY, '1');
-  else sessionStorage.removeItem(SESSION_KEY);
+function toISODate(d) {
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, '0'),
+    String(d.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function mondayOf(d) {
+  const copy = startOfDay(d);
+  const day = copy.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  copy.setDate(copy.getDate() + diff);
+  return copy;
+}
+
+function addDays(d, n) {
+  const copy = new Date(d);
+  copy.setDate(copy.getDate() + n);
+  return copy;
+}
+
+function getPin() {
+  return sessionStorage.getItem(SESSION_PIN_KEY) || '';
+}
+
+function isLoggedIn() {
+  return !!getPin();
+}
+
+function setLoggedIn(pin) {
+  if (pin) sessionStorage.setItem(SESSION_PIN_KEY, pin);
+  else sessionStorage.removeItem(SESSION_PIN_KEY);
 }
 
 function showPanel() {
   loginEl.classList.add('hidden');
   panelEl.classList.remove('hidden');
+  syncViewButtons();
   loadBookings();
 }
 
@@ -43,26 +84,7 @@ function showLogin() {
   loginEl.classList.remove('hidden');
   pinInput.value = '';
   pinError.textContent = '';
-}
-
-function formatFechaLabel(iso) {
-  const [y, m, d] = iso.split('-').map(Number);
-  const date = new Date(y, m - 1, d);
-  const today = new Date();
-  const todayISO = [
-    today.getFullYear(),
-    String(today.getMonth() + 1).padStart(2, '0'),
-    String(today.getDate()).padStart(2, '0'),
-  ].join('-');
-
-  const weekday = date.toLocaleDateString('es-CL', { weekday: 'long' });
-  const label = date.toLocaleDateString('es-CL', {
-    day: 'numeric',
-    month: 'long',
-  });
-
-  if (iso === todayISO) return `Hoy · ${label}`;
-  return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} · ${label}`;
+  closeSheet();
 }
 
 function normalizePhone(phone) {
@@ -85,77 +107,173 @@ function statusBadge(status) {
   return `<span class="admin-badge ${s.cls}">${s.label}</span>`;
 }
 
-function groupByFecha(bookings) {
-  const groups = new Map();
-  for (const b of bookings) {
-    if (!groups.has(b.fecha)) groups.set(b.fecha, []);
-    groups.get(b.fecha).push(b);
+function timeSlots() {
+  const slots = [];
+  for (let t = GRID_START; t + INTERVAL <= GRID_END; t += INTERVAL) {
+    const h = Math.floor(t / 60);
+    const m = t % 60;
+    slots.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
   }
-  return groups;
+  return slots;
 }
 
-function renderBookings(bookings) {
-  bookingsCache = bookings;
-  const active = bookings.filter((b) => b.status === 'confirmed');
-  const others = bookings.filter((b) => b.status !== 'confirmed');
-  const ordered = [...active, ...others];
+function parseMinutes(time) {
+  const [h, m] = String(time).split(':').map(Number);
+  return h * 60 + m;
+}
 
-  countEl.textContent = active.length === 0
-    ? 'Sin citas confirmadas próximas'
-    : `${active.length} confirmada${active.length === 1 ? '' : 's'} próxima${active.length === 1 ? '' : 's'}`;
+function rangeISO() {
+  if (viewMode === 'day') {
+    const iso = toISODate(cursor);
+    return { fromISO: iso, toISO: iso };
+  }
+  const mon = mondayOf(cursor);
+  return { fromISO: toISODate(mon), toISO: toISODate(addDays(mon, 6)) };
+}
 
-  if (ordered.length === 0) {
-    listEl.innerHTML = `
-      <div class="admin-empty">
-        <p>No hay citas para mostrar.</p>
-        <p class="admin-empty-hint">Cuando un cliente reserve, aparecerá aquí.</p>
-      </div>
-    `;
+function syncViewButtons() {
+  document.getElementById('btnCalDay').classList.toggle('is-active', viewMode === 'day');
+  document.getElementById('btnCalWeek').classList.toggle('is-active', viewMode === 'week');
+}
+
+function updateCalLabel() {
+  if (viewMode === 'day') {
+    calLabel.textContent = cursor.toLocaleDateString('es-CL', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
     return;
   }
+  const mon = mondayOf(cursor);
+  const sun = addDays(mon, 6);
+  calLabel.textContent = `${mon.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })} – ${sun.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' })}`;
+}
 
-  const groups = groupByFecha(ordered);
-  let html = '';
+function bookingsForFecha(iso) {
+  return bookingsCache.filter((b) => b.fecha === iso && b.status !== 'cancelled');
+}
 
-  for (const [fecha, items] of groups) {
-    html += `<div class="admin-day">
-      <h2 class="admin-day-title">${escapeHtml(formatFechaLabel(fecha))}</h2>
-      <div class="admin-day-list">`;
+function eventStyle(booking) {
+  const start = parseMinutes(booking.time);
+  const top = ((start - GRID_START) / INTERVAL) * SLOT_PX;
+  const height = Math.max((booking.duration / INTERVAL) * SLOT_PX - 4, 36);
+  return `top:${top}px;height:${height}px`;
+}
 
-    for (const b of items) {
-      const canAct = b.status === 'confirmed';
-      html += `
-        <article class="admin-card" data-id="${escapeHtml(b.id)}">
-          <div class="admin-card-top">
-            <span class="admin-time">${escapeHtml(b.time)}</span>
-            ${statusBadge(b.status)}
-          </div>
-          <div class="admin-card-service">${escapeHtml(b.serviceName)}</div>
-          <div class="admin-card-meta">
-            <div><span class="admin-meta-label">Cliente</span> ${escapeHtml(b.cliente.nombre)}</div>
-            <div><span class="admin-meta-label">Teléfono</span> ${escapeHtml(b.cliente.telefono)}</div>
-            <div><span class="admin-meta-label">Pago</span> ${escapeHtml(b.pago)} · ${formatPrice(b.total)}</div>
-          </div>
-          ${canAct ? `
-            <div class="admin-card-actions">
-              <button type="button" class="btn-continue admin-btn-sm" data-action="complete" data-id="${escapeHtml(b.id)}">Completada</button>
-              <button type="button" class="btn-wa-cancel admin-btn-sm" data-action="cancel-wa" data-id="${escapeHtml(b.id)}">
-                Cancelar por WhatsApp
+function eventClass(booking) {
+  if (booking.status === 'completed') return 'week-event week-event--done';
+  return 'week-event';
+}
+
+function renderDayView() {
+  const iso = toISODate(cursor);
+  const slots = timeSlots();
+  const items = bookingsForFecha(iso);
+  const height = slots.length * SLOT_PX;
+
+  listEl.innerHTML = `
+    <div class="day-cal" style="--slot-h:${SLOT_PX}px">
+      <div class="day-times">
+        ${slots.map((s) => `<div class="day-time">${s}</div>`).join('')}
+      </div>
+      <div class="day-track" style="height:${height}px">
+        ${slots.map(() => `<div class="day-line" style="height:${SLOT_PX}px"></div>`).join('')}
+        ${items.map((b) => `
+          <button type="button" class="${eventClass(b)}" style="${eventStyle(b)}" data-open="${escapeHtml(b.id)}">
+            <strong>${escapeHtml(b.time)}</strong>
+            <span>${escapeHtml(b.cliente.nombre)}</span>
+            <em>${escapeHtml(b.serviceName)}</em>
+          </button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderWeekView() {
+  const mon = mondayOf(cursor);
+  const days = Array.from({ length: 7 }, (_, i) => addDays(mon, i));
+  const slots = timeSlots();
+  const height = slots.length * SLOT_PX;
+  const todayISO = toISODate(new Date());
+
+  listEl.innerHTML = `
+    <div class="week-cal" style="--slot-h:${SLOT_PX}px">
+      <div class="week-head">
+        <div class="week-corner"></div>
+        ${days.map((d) => {
+          const iso = toISODate(d);
+          const name = d.toLocaleDateString('es-CL', { weekday: 'short' });
+          return `<div class="week-day-head${iso === todayISO ? ' is-today' : ''}">
+            <span>${escapeHtml(name)}</span>
+            <strong>${d.getDate()}</strong>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="week-body">
+        <div class="week-times">
+          ${slots.map((s) => `<div class="day-time">${s}</div>`).join('')}
+        </div>
+        ${days.map((d) => {
+          const iso = toISODate(d);
+          const items = bookingsForFecha(iso);
+          return `<div class="week-col" style="height:${height}px">
+            ${slots.map(() => `<div class="day-line" style="height:${SLOT_PX}px"></div>`).join('')}
+            ${items.map((b) => `
+              <button type="button" class="${eventClass(b)}" style="${eventStyle(b)}" data-open="${escapeHtml(b.id)}">
+                <strong>${escapeHtml(b.time)}</strong>
+                <span>${escapeHtml(b.cliente.nombre)}</span>
               </button>
-            </div>
-          ` : `
-            <div class="admin-card-actions">
-              <a class="btn-sec admin-btn-sm admin-wa" href="${whatsappUrl(b.cliente.telefono)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
-            </div>
-          `}
-        </article>
-      `;
-    }
+            `).join('')}
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
 
-    html += `</div></div>`;
-  }
+function renderCalendar() {
+  const active = bookingsCache.filter((b) => b.status === 'confirmed');
+  countEl.textContent = active.length === 0
+    ? 'Sin citas confirmadas en esta vista'
+    : `${active.length} confirmada${active.length === 1 ? '' : 's'} en esta vista`;
 
-  listEl.innerHTML = html;
+  updateCalLabel();
+  if (viewMode === 'day') renderDayView();
+  else renderWeekView();
+}
+
+function openSheet(id) {
+  const b = bookingsCache.find((x) => x.id === id);
+  if (!b) return;
+  const canAct = b.status === 'confirmed';
+  sheetBody.innerHTML = `
+    <div class="sheet-top">
+      <h2 id="sheetTitle">${escapeHtml(b.time)} · ${escapeHtml(b.serviceName)}</h2>
+      ${statusBadge(b.status)}
+    </div>
+    <div class="admin-card-meta">
+      <div><span class="admin-meta-label">Fecha</span> ${escapeHtml(b.fecha)}</div>
+      <div><span class="admin-meta-label">Cliente</span> ${escapeHtml(b.cliente.nombre)}</div>
+      <div><span class="admin-meta-label">WhatsApp</span> ${escapeHtml(b.cliente.telefono)}</div>
+      <div><span class="admin-meta-label">Pago</span> ${escapeHtml(b.pago || '—')} · ${formatPrice(b.total || 0)}</div>
+    </div>
+    <div class="admin-card-actions">
+      ${canAct ? `
+        <button type="button" class="btn-continue admin-btn-sm" data-action="complete" data-id="${escapeHtml(b.id)}">Completada</button>
+        <button type="button" class="btn-wa-cancel admin-btn-sm" data-action="cancel-wa" data-id="${escapeHtml(b.id)}">Cancelar por WhatsApp</button>
+      ` : `
+        <a class="btn-sec admin-btn-sm" href="${whatsappUrl(b.cliente.telefono)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+      `}
+    </div>
+  `;
+  sheetEl.classList.remove('hidden');
+}
+
+function closeSheet() {
+  sheetEl.classList.add('hidden');
+  sheetBody.innerHTML = '';
 }
 
 async function loadBookings() {
@@ -166,13 +284,16 @@ async function loadBookings() {
     return;
   }
 
-  configWarn.classList.add('hidden');
+  const hardened = await isHardeningReady();
+  configWarn.classList.toggle('hidden', hardened);
+
   countEl.textContent = 'Cargando…';
-  listEl.innerHTML = '<p class="admin-loading">Cargando citas…</p>';
+  listEl.innerHTML = '<p class="admin-loading">Cargando agenda…</p>';
 
   try {
-    const bookings = await fetchUpcomingBookings({ includePastToday: true });
-    renderBookings(bookings);
+    const { fromISO, toISO } = rangeISO();
+    bookingsCache = await fetchAdminBookings(getPin(), { fromISO, toISO });
+    renderCalendar();
   } catch (err) {
     console.error('[admin] Error al cargar:', err);
     countEl.textContent = 'Error al cargar';
@@ -183,11 +304,12 @@ async function loadBookings() {
 
 async function handleStatusChange(id, status) {
   try {
-    await updateBookingStatus(id, status);
+    await updateBookingStatus(getPin(), id, status);
     showToast(
       status === 'completed' ? 'Cita marcada como completada' : 'Cita cancelada',
       'success',
     );
+    closeSheet();
     await loadBookings();
   } catch (err) {
     console.error('[admin] Error al actualizar:', err);
@@ -211,24 +333,32 @@ async function cancelViaWhatsApp(id) {
   await handleStatusChange(id, 'cancelled');
 }
 
-pinForm.addEventListener('submit', (e) => {
+pinForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   pinError.textContent = '';
   const pin = pinInput.value.trim();
+  const btn = document.getElementById('btnPin');
+  btn.disabled = true;
 
-  if (pin !== APP_CONFIG.admin.pin) {
-    pinError.textContent = 'PIN incorrecto';
-    pinInput.classList.add('error');
-    return;
+  try {
+    const ok = await verifyAdminPin(pin);
+    if (!ok) {
+      pinError.textContent = 'PIN incorrecto';
+      pinInput.classList.add('error');
+      return;
+    }
+    pinInput.classList.remove('error');
+    setLoggedIn(pin);
+    showPanel();
+  } catch (err) {
+    pinError.textContent = err.message || 'No se pudo validar el PIN';
+  } finally {
+    btn.disabled = false;
   }
-
-  pinInput.classList.remove('error');
-  setLoggedIn(true);
-  showPanel();
 });
 
 document.getElementById('btnLogout').addEventListener('click', () => {
-  setLoggedIn(false);
+  setLoggedIn('');
   showLogin();
 });
 
@@ -236,12 +366,44 @@ document.getElementById('btnRefresh').addEventListener('click', () => {
   loadBookings();
 });
 
+document.getElementById('btnCalDay').addEventListener('click', () => {
+  viewMode = 'day';
+  syncViewButtons();
+  loadBookings();
+});
+
+document.getElementById('btnCalWeek').addEventListener('click', () => {
+  viewMode = 'week';
+  syncViewButtons();
+  loadBookings();
+});
+
+document.getElementById('adminCalPrev').addEventListener('click', () => {
+  cursor = addDays(cursor, viewMode === 'day' ? -1 : -7);
+  loadBookings();
+});
+
+document.getElementById('adminCalNext').addEventListener('click', () => {
+  cursor = addDays(cursor, viewMode === 'day' ? 1 : 7);
+  loadBookings();
+});
+
+document.getElementById('btnCalToday').addEventListener('click', () => {
+  cursor = startOfDay(new Date());
+  loadBookings();
+});
+
 listEl.addEventListener('click', (e) => {
+  const openBtn = e.target.closest('[data-open]');
+  if (openBtn) openSheet(openBtn.dataset.open);
+});
+
+sheetEl.addEventListener('click', (e) => {
+  if (e.target.id === 'sheetClose') closeSheet();
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
   const { action, id } = btn.dataset;
   if (!id) return;
-
   if (action === 'complete') handleStatusChange(id, 'completed');
   if (action === 'cancel-wa') cancelViaWhatsApp(id);
 });

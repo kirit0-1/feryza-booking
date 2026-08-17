@@ -1,39 +1,10 @@
--- Feryza Barber — esquema de reservas (Supabase)
--- Instalación nueva: ejecutar este archivo completo.
--- Proyecto ya en marcha: ejecutar supabase/hardening.sql (no borra citas).
+-- Feryza Barber — endurecer RLS (proyecto YA creado, sin borrar citas)
+-- SQL Editor → New query → Run TODO este archivo una vez.
+-- El PIN deja de vivir en el frontend: se valida aquí (mismo PIN actual).
 
 create extension if not exists "pgcrypto";
 
-create table if not exists public.bookings (
-  id uuid primary key default gen_random_uuid(),
-  barber_id text not null,
-  service_id text not null,
-  service_name text not null,
-  fecha date not null,
-  time text not null,
-  duration int not null default 45,
-  cliente_nombre text not null,
-  cliente_telefono text not null,
-  cliente_correo text not null,
-  pago text not null,
-  total int not null default 0,
-  status text not null default 'confirmed'
-    check (status in ('confirmed', 'cancelled', 'completed')),
-  created_at timestamptz not null default now()
-);
-
-create unique index if not exists bookings_unique_slot_confirmed
-  on public.bookings (barber_id, fecha, time)
-  where status = 'confirmed';
-
-create index if not exists bookings_fecha_barber_idx
-  on public.bookings (fecha, barber_id);
-
-create index if not exists bookings_status_fecha_idx
-  on public.bookings (status, fecha);
-
-alter table public.bookings enable row level security;
-
+-- PIN hasheado (no se puede leer desde la API)
 create table if not exists public.admin_settings (
   id int primary key default 1 check (id = 1),
   pin_hash text not null
@@ -70,6 +41,7 @@ as $$
   select public._admin_pin_ok(p_pin);
 $$;
 
+-- Disponibilidad pública: SOLO horario ocupado, sin nombre/teléfono/correo
 create or replace function public.get_confirmed_slots(p_fecha date, p_barber_id text default null)
 returns table (
   id uuid,
@@ -91,6 +63,7 @@ as $$
     and (p_barber_id is null or b.barber_id = p_barber_id);
 $$;
 
+-- Alta de reserva (el cliente no necesita SELECT de la tabla)
 create or replace function public.create_booking(
   p_barber_id text,
   p_service_id text,
@@ -142,6 +115,7 @@ exception
 end;
 $$;
 
+-- Limpia completadas/canceladas de días anteriores
 create or replace function public.purge_old_bookings()
 returns void
 language sql
@@ -211,9 +185,15 @@ grant execute on function public.create_booking(text, text, text, date, text, in
 grant execute on function public.admin_list_bookings(text, date, date) to anon, authenticated;
 grant execute on function public.admin_update_status(text, uuid, text) to anon, authenticated;
 
+-- Quitar acceso directo a filas con datos de clientes
 drop policy if exists "bookings_select_public" on public.bookings;
 drop policy if exists "bookings_insert_public" on public.bookings;
 drop policy if exists "bookings_update_status" on public.bookings;
 
 revoke all on public.bookings from anon, authenticated, public;
 revoke all on public.admin_settings from anon, authenticated, public;
+
+-- Para cambiar el PIN después:
+-- update public.admin_settings
+--   set pin_hash = crypt('tu-nuevo-pin', gen_salt('bf'))
+--   where id = 1;

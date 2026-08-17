@@ -1,10 +1,11 @@
 /**
- * supabase.js — Cliente y helpers CRUD para reservas Feryza
+ * supabase.js — Cliente y helpers. Tras hardening.sql: RPC (sin PII pública).
  */
 
 import { APP_CONFIG, isSupabaseConfigured } from './config.js';
 
 let client = null;
+let rpcReady = null;
 
 export function getClient() {
   if (!isSupabaseConfigured()) {
@@ -20,7 +21,6 @@ export function getClient() {
   return client;
 }
 
-/** Normaliza fila Supabase → forma usada por availability.js */
 export function mapBookingRow(row) {
   return {
     id: row.id,
@@ -31,9 +31,9 @@ export function mapBookingRow(row) {
     time: row.time,
     duration: row.duration,
     cliente: {
-      nombre: row.cliente_nombre,
-      telefono: row.cliente_telefono,
-      correo: row.cliente_correo,
+      nombre: row.cliente_nombre ?? '',
+      telefono: row.cliente_telefono ?? '',
+      correo: row.cliente_correo ?? '',
     },
     pago: row.pago,
     total: row.total,
@@ -42,32 +42,99 @@ export function mapBookingRow(row) {
   };
 }
 
-/**
- * Citas confirmadas para un barbero en una fecha (disponibilidad).
- */
+function isMissingRpc(error) {
+  const msg = `${error?.message ?? ''} ${error?.code ?? ''}`.toLowerCase();
+  return msg.includes('could not find the function')
+    || msg.includes('does not exist')
+    || error?.code === 'PGRST202'
+    || error?.code === '42883';
+}
+
+export async function isHardeningReady() {
+  if (rpcReady !== null) return rpcReady;
+  try {
+    const sb = getClient();
+    const { error } = await sb.rpc('admin_verify_pin', { p_pin: '__probe__' });
+    if (!error || !isMissingRpc(error)) {
+      rpcReady = true;
+      return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  rpcReady = false;
+  return false;
+}
+
 export async function fetchConfirmedBookings(barberId, fecha) {
   const sb = getClient();
+  const barberArg = barberId && barberId !== 'any' ? barberId : null;
+
+  const { data, error } = await sb.rpc('get_confirmed_slots', {
+    p_fecha: fecha,
+    p_barber_id: barberArg,
+  });
+
+  if (!error) {
+    return (data ?? []).map((row) => mapBookingRow({
+      ...row,
+      cliente_nombre: '',
+      cliente_telefono: '',
+      cliente_correo: '',
+    }));
+  }
+
+  if (!isMissingRpc(error)) throw error;
+
   let query = sb
     .from('bookings')
     .select('id, barber_id, service_id, service_name, fecha, time, duration, status')
     .eq('fecha', fecha)
     .eq('status', 'confirmed');
 
-  if (barberId && barberId !== 'any') {
-    query = query.eq('barber_id', barberId);
-  }
+  if (barberArg) query = query.eq('barber_id', barberArg);
 
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data ?? []).map(mapBookingRow);
+  const fallback = await query;
+  if (fallback.error) throw fallback.error;
+  return (fallback.data ?? []).map(mapBookingRow);
 }
 
-/**
- * Inserta una reserva confirmada.
- * Lanza error con code SLOT_TAKEN si choca el índice único.
- */
 export async function insertBooking(record) {
   const sb = getClient();
+  const payload = {
+    p_barber_id: record.barberId,
+    p_service_id: record.serviceId,
+    p_service_name: record.serviceName ?? record.serviceId,
+    p_fecha: record.fecha,
+    p_time: record.time,
+    p_duration: record.duration,
+    p_cliente_nombre: record.cliente?.nombre ?? '',
+    p_cliente_telefono: record.cliente?.telefono ?? '',
+    p_cliente_correo: record.cliente?.correo ?? '',
+    p_pago: record.pago ?? '',
+    p_total: record.total ?? 0,
+  };
+
+  const { data, error } = await sb.rpc('create_booking', payload);
+
+  if (!error) {
+    const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+    return {
+      ...record,
+      id: parsed.id,
+      barberId: parsed.barber_id ?? record.barberId,
+      status: 'confirmed',
+    };
+  }
+
+  if (error.code === '23505' || `${error.message}`.includes('SLOT_TAKEN')) {
+    const slotErr = new Error('Esa hora ya está tomada. Elige otro horario.');
+    slotErr.code = 'SLOT_TAKEN';
+    throw slotErr;
+  }
+
+  if (!isMissingRpc(error)) throw error;
+
   const row = {
     barber_id: record.barberId,
     service_id: record.serviceId,
@@ -83,64 +150,97 @@ export async function insertBooking(record) {
     status: 'confirmed',
   };
 
-  const { data, error } = await sb.from('bookings').insert(row).select().single();
-
-  if (error) {
-    if (error.code === '23505') {
+  const inserted = await sb.from('bookings').insert(row).select().single();
+  if (inserted.error) {
+    if (inserted.error.code === '23505') {
       const slotErr = new Error('Esa hora ya está tomada. Elige otro horario.');
       slotErr.code = 'SLOT_TAKEN';
       throw slotErr;
     }
-    throw error;
+    throw inserted.error;
   }
-
-  return mapBookingRow(data);
+  return mapBookingRow(inserted.data);
 }
 
-/**
- * Próximas citas (hoy + futuras) para el panel admin.
- * Incluye confirmed; completed/cancelled se filtran en UI si se desea.
- */
-export async function fetchUpcomingBookings({ includePastToday = true } = {}) {
+export async function verifyAdminPin(pin) {
   const sb = getClient();
-  const today = new Date();
-  const y = today.getFullYear();
-  const m = String(today.getMonth() + 1).padStart(2, '0');
-  const d = String(today.getDate()).padStart(2, '0');
-  const todayISO = `${y}-${m}-${d}`;
+  const { data, error } = await sb.rpc('admin_verify_pin', { p_pin: pin });
+  if (!error) return data === true;
+  if (!isMissingRpc(error)) throw error;
+  return pin === APP_CONFIG.admin.pin;
+}
 
-  const { data, error } = await sb
+export async function fetchAdminBookings(pin, { fromISO, toISO }) {
+  const sb = getClient();
+  const { data, error } = await sb.rpc('admin_list_bookings', {
+    p_pin: pin,
+    p_from: fromISO,
+    p_to: toISO,
+  });
+
+  if (!error) return (data ?? []).map(mapBookingRow);
+  if (!isMissingRpc(error)) throw error;
+
+  const fallback = await sb
     .from('bookings')
     .select('*')
-    .gte('fecha', todayISO)
+    .gte('fecha', fromISO)
+    .lte('fecha', toISO)
     .order('fecha', { ascending: true })
     .order('time', { ascending: true });
 
-  if (error) throw error;
-
-  const nowMin = today.getHours() * 60 + today.getMinutes();
-  const rows = (data ?? []).map(mapBookingRow);
-
-  if (!includePastToday) {
-    return rows.filter((b) => {
-      if (b.fecha > todayISO) return true;
-      const [hh, mm] = b.time.split(':').map(Number);
-      return hh * 60 + mm >= nowMin;
-    });
-  }
-
-  return rows;
+  if (fallback.error) throw fallback.error;
+  return (fallback.data ?? []).map(mapBookingRow);
 }
 
-export async function updateBookingStatus(id, status) {
+export async function updateBookingStatus(pin, id, status) {
   const sb = getClient();
-  const { data, error } = await sb
+  const { data, error } = await sb.rpc('admin_update_status', {
+    p_pin: pin,
+    p_id: id,
+    p_status: status,
+  });
+
+  if (!error) {
+    const row = Array.isArray(data) ? data[0] : data;
+    return mapBookingRow(row);
+  }
+  if (!isMissingRpc(error)) throw error;
+
+  const fallback = await sb
     .from('bookings')
     .update({ status })
     .eq('id', id)
     .select()
     .single();
 
-  if (error) throw error;
-  return mapBookingRow(data);
+  if (fallback.error) throw fallback.error;
+  return mapBookingRow(fallback.data);
+}
+
+/** @deprecated usar fetchAdminBookings */
+export async function fetchUpcomingBookings({ includePastToday = true } = {}) {
+  const today = new Date();
+  const todayISO = toLocalISO(today);
+  const to = new Date(today);
+  to.setDate(to.getDate() + 60);
+  const rows = await fetchAdminBookings(APP_CONFIG.admin.pin, {
+    fromISO: todayISO,
+    toISO: toLocalISO(to),
+  });
+  if (includePastToday) return rows;
+  const nowMin = today.getHours() * 60 + today.getMinutes();
+  return rows.filter((b) => {
+    if (b.fecha > todayISO) return true;
+    const [hh, mm] = b.time.split(':').map(Number);
+    return hh * 60 + mm >= nowMin;
+  });
+}
+
+function toLocalISO(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
 }

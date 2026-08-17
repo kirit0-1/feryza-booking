@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0A0A0A">
+  <meta name="theme-color" content="#121212">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="robots" content="noindex">
@@ -46,21 +46,38 @@
     <section class="admin-panel hidden" id="adminPanel">
       <div class="admin-toolbar">
         <div>
-          <h1 class="admin-title">Próximas citas</h1>
+          <h1 class="admin-title">Agenda</h1>
           <p class="admin-sub" id="adminCount">Cargando…</p>
         </div>
         <div class="admin-toolbar-actions">
-          <button type="button" class="btn-sec admin-btn-sm" id="btnRefresh" aria-label="Actualizar">
-            Actualizar
-          </button>
+          <button type="button" class="btn-sec admin-btn-sm" id="btnCalDay">Día</button>
+          <button type="button" class="btn-sec admin-btn-sm" id="btnCalWeek">Semana</button>
+          <button type="button" class="btn-sec admin-btn-sm" id="btnRefresh" aria-label="Actualizar">Actualizar</button>
           <button type="button" class="btn-sec admin-btn-sm" id="btnLogout">Salir</button>
         </div>
       </div>
       <div class="admin-config-warn hidden" id="configWarn">
-        Configura Supabase en <code>scripts/config.js</code> (URL y anon key) y ejecuta <code>supabase/schema.sql</code>.
+        Ejecuta <code>supabase/hardening.sql</code> en el SQL Editor de Supabase para cerrar el acceso público a los datos de clientes.
       </div>
-      <div id="bookingsList" class="admin-list"></div>
+      <div class="admin-cal-nav">
+        <button type="button" class="cal-nav" id="adminCalPrev" aria-label="Anterior">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="admin-cal-label" id="adminCalLabel"></div>
+        <button type="button" class="cal-nav" id="adminCalNext" aria-label="Siguiente">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+        <button type="button" class="btn-sec admin-btn-sm" id="btnCalToday">Hoy</button>
+      </div>
+      <div id="bookingsList" class="admin-calendar"></div>
     </section>
+
+    <div class="admin-sheet hidden" id="adminSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+      <button type="button" class="admin-sheet-backdrop" id="sheetClose" aria-label="Cerrar"></button>
+      <div class="admin-sheet-panel">
+        <div id="sheetBody"></div>
+      </div>
+    </div>
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
