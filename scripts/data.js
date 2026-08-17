@@ -8,12 +8,12 @@ export const SERVICES = [
   {
     id: 'corte',
     name: 'Corte clásico',
-    desc: 'El corte de siempre, a máquina y tijera.',
+    desc: 'Fade, cejas y masaje con máquina. Sin lavado.',
     includes: [
-      'Consulta rápida del estilo',
-      'Lavado',
-      'Corte a máquina y tijera',
-      'Peinado con producto',
+      'Fade',
+      'Perfilado de cejas',
+      'Opciones según el cliente',
+      'Masaje corto con máquina',
     ],
     price: 7000,
     dur: 45,
@@ -42,7 +42,7 @@ export const SERVICES = [
     desc: '4 cortes en 30 días. Ahorras $6.000.',
     includes: [
       '4 visitas de corte clásico',
-      'Lavado y peinado en cada una',
+      'Fade, cejas y masaje con máquina',
       'Válida 30 días desde la compra',
       'La barba se puede sumar en cada visita',
     ],
