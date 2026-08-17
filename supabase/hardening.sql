@@ -47,7 +47,7 @@ returns table (
   id uuid,
   barber_id text,
   fecha date,
-  time text,
+  "time" text,
   duration int,
   status text
 )
@@ -56,7 +56,7 @@ stable
 security definer
 set search_path = public
 as $$
-  select b.id, b.barber_id, b.fecha, b.time, b.duration, b.status
+  select b.id, b.barber_id, b.fecha, b."time", b.duration, b.status
   from public.bookings b
   where b.fecha = p_fecha
     and b.status = 'confirmed'
@@ -99,7 +99,7 @@ begin
   end if;
 
   insert into public.bookings (
-    barber_id, service_id, service_name, fecha, time, duration,
+    barber_id, service_id, service_name, fecha, "time", duration,
     cliente_nombre, cliente_telefono, cliente_correo, pago, total, status
   ) values (
     p_barber_id, p_service_id, p_service_name, p_fecha, p_time, p_duration,
@@ -145,7 +145,7 @@ begin
     from public.bookings
     where fecha >= p_from
       and fecha <= p_to
-    order by fecha, time;
+    order by fecha, "time";
 end;
 $$;
 
