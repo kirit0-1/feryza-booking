@@ -6,18 +6,19 @@
 */
 
 :root {
-  --bg:        #FFFFFF;
-  --surface:   #FFFFFF;
-  --surface2:  #F5F5F5;
+  --bg:        #EDE6F2;
+  --surface:   #F5F0F8;
+  --surface2:  #E4D9ED;
   --ink:       #121212;
   --muted:     #5C4E6E;
-  --border:    #D7C6EA;
+  --border:    #C9B8DB;
   --ink-hard:  #121212;
   --accent:    #E5ACFF;
   --purple:    #370D5E;
-  --accent-bg: #F4E4FF;
+  --accent-bg: #F0E4FA;
   --accent-soft: rgba(229, 172, 255, .45);
-  --neon:      0 0 18px rgba(229, 172, 255, .7);
+  --neon:      0 0 16px rgba(229, 172, 255, .55);
+  --neon-border: rgba(229, 172, 255, .75);
   --neo:       4px 4px 0 #121212;
   --wa:        #25D366;
   --wa-dark:   #1DA851;
@@ -38,7 +39,9 @@ html {
   overflow-x: hidden;
 }
 body {
-  background: #FFFFFF;
+  background:
+    radial-gradient(ellipse 70% 35% at 50% -5%, rgba(229, 172, 255, .22), transparent 60%),
+    var(--bg);
   color: var(--ink);
   font-family: var(--f-body);
   font-size: 15px;
@@ -68,7 +71,7 @@ input, select, textarea {
 }
 
 .app-header {
-  background: rgba(255, 255, 255, .96);
+  background: rgba(237, 230, 242, .94);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
@@ -174,7 +177,8 @@ input, select, textarea {
 .sel-card {
   position: relative;
   background: var(--surface);
-  border: 2px solid var(--border);
+  border: 2px solid var(--neon-border);
+  box-shadow: 0 0 14px rgba(229, 172, 255, .2);
   border-radius: var(--radius);
   padding: 18px 20px;
   cursor: pointer;
@@ -182,7 +186,7 @@ input, select, textarea {
   user-select: none;
   text-align: left; width: 100%;
 }
-.sel-card:hover { border-color: var(--purple); background: var(--accent-bg); }
+.sel-card:hover { border-color: var(--purple); background: var(--accent-bg); box-shadow: var(--neon); }
 .sel-card.selected {
   border-color: var(--ink-hard);
   background: var(--accent-bg);
@@ -276,12 +280,13 @@ input, select, textarea {
 
 .barber-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
 .barber-card {
-  background: var(--surface); border: 1.5px solid var(--border);
+  background: var(--surface); border: 2px solid var(--neon-border);
+  box-shadow: 0 0 14px rgba(229, 172, 255, .2);
   border-radius: var(--radius); padding: 22px 16px;
   cursor: pointer; text-align: center;
   transition: border-color var(--transition), background var(--transition), box-shadow var(--transition);
 }
-.barber-card:hover { border-color: var(--purple); background: var(--accent-bg); }
+.barber-card:hover { border-color: var(--purple); background: var(--accent-bg); box-shadow: var(--neon); }
 .barber-card.selected {
   border-color: var(--ink-hard); background: var(--accent-bg);
   box-shadow: var(--neo), var(--neon);
@@ -292,7 +297,8 @@ input, select, textarea {
 .barber-tag { font-size: .76rem; color: var(--muted); margin-top: 2px; }
 
 .calendar-wrap {
-  background: var(--surface); border: 2px solid var(--border);
+  background: var(--surface); border: 2px solid var(--neon-border);
+  box-shadow: 0 0 14px rgba(229, 172, 255, .2);
   border-radius: var(--radius); overflow: hidden; margin-bottom: 24px;
 }
 .cal-header {
@@ -368,12 +374,13 @@ input, select, textarea {
 
 .pago-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
 .pago-card {
-  background: var(--surface); border: 1.5px solid var(--border);
+  background: var(--surface); border: 2px solid var(--neon-border);
+  box-shadow: 0 0 14px rgba(229, 172, 255, .2);
   border-radius: var(--radius); padding: 16px 18px;
   cursor: pointer; display: flex; align-items: center; gap: 14px;
   transition: border-color var(--transition), background var(--transition);
 }
-.pago-card:hover { border-color: var(--purple); background: var(--accent-bg); }
+.pago-card:hover { border-color: var(--purple); background: var(--accent-bg); box-shadow: var(--neon); }
 .pago-card.selected { border-color: var(--ink-hard); background: var(--accent-bg); box-shadow: var(--neo); }
 .pago-icon {
   width: 38px; height: 38px; border-radius: 9px; background: var(--surface2);
@@ -395,10 +402,10 @@ input, select, textarea {
 }
 
 .summary-box {
-  background: var(--surface); border: 2px solid var(--ink-hard);
+  background: var(--surface); border: 2px solid var(--neon-border);
   border-radius: var(--radius); overflow: hidden;
   position: sticky; top: 88px;
-  box-shadow: var(--neo);
+  box-shadow: var(--neo), var(--neon);
 }
 .summary-head {
   padding: 18px 20px; border-bottom: 1px solid var(--border);
