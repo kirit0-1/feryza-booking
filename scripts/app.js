@@ -23,8 +23,8 @@ const STEPS = [
   { label: 'Pago' },
 ];
 
-const ACCENT = '#E5ACFF';
-const MUTED_RING = '#3A2A4A';
+const ACCENT = '#370D5E';
+const MUTED_RING = '#D7C6EA';
 
 function renderProgress(active) {
   const track = document.getElementById('progressTrack');
@@ -46,7 +46,7 @@ function renderProgress(active) {
           <circle cx="16" cy="16" r="9" stroke="${innerStroke}" stroke-width="1.6" opacity="${isDone || isActive ? 1 : 0.4}"/>
           ${isDone
             ? `<path d="M10 16l4 4 8-8" stroke="${ACCENT}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`
-            : `<text x="16" y="20" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="10" fill="${isActive ? ACCENT : '#A898B8'}">${stepNum}</text>`
+            : `<text x="16" y="20" text-anchor="middle" font-family="Barlow,sans-serif" font-weight="700" font-size="10" fill="${isActive ? ACCENT : '#5C4E6E'}">${stepNum}</text>`
           }
         </svg>
       </div>

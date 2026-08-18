@@ -59,7 +59,7 @@ export const BARBERS = [
     id: 'fernando',
     name: 'Fernando',
     tag: 'Barbero principal',
-    color: '#E5ACFF',
+    color: '#370D5E',
     letter: 'F',
     email: 'Fernandoisaias2606@gmail.com',
     isAssignable: true,

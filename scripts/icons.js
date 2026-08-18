@@ -18,8 +18,8 @@ export const SUMMARY_ICONS = {
 };
 
 export const PAGO_ICONS = {
-  cash: `<svg viewBox="0 0 24 24" fill="none" stroke="#E5ACFF" stroke-width="1.6"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="14" r="2"/></svg>`,
-  transfer: `<svg viewBox="0 0 24 24" fill="none" stroke="#E5ACFF" stroke-width="1.6"><path d="M18 8l4-4-4-4M2 12h20M6 20l-4-4 4-4M22 12H2"/></svg>`,
+  cash: `<svg viewBox="0 0 24 24" fill="none" stroke="#370D5E" stroke-width="1.6"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="12" cy="14" r="2"/></svg>`,
+  transfer: `<svg viewBox="0 0 24 24" fill="none" stroke="#370D5E" stroke-width="1.6"><path d="M18 8l4-4-4-4M2 12h20M6 20l-4-4 4-4M22 12H2"/></svg>`,
 };
 
 export function getServiceIcon(service) {
