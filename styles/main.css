@@ -6,9 +6,9 @@
 */
 
 :root {
-  --bg:        #E6DCEC;
-  --surface:   #EFE8F5;
-  --surface2:  #E4D4F2;
+  --bg:        #FFFFFF;
+  --surface:   #FFFFFF;
+  --surface2:  #F5F5F5;
   --ink:       #121212;
   --muted:     #5C4E6E;
   --border:    #D7C6EA;
@@ -38,10 +38,7 @@ html {
   overflow-x: hidden;
 }
 body {
-  background:
-    radial-gradient(ellipse 80% 40% at 50% -8%, rgba(229, 172, 255, .55), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 100% 0%, rgba(55, 13, 94, .12), transparent 50%),
-    #E6DCEC;
+  background: #FFFFFF;
   color: var(--ink);
   font-family: var(--f-body);
   font-size: 15px;
@@ -71,7 +68,7 @@ input, select, textarea {
 }
 
 .app-header {
-  background: rgba(230, 220, 236, .94);
+  background: rgba(255, 255, 255, .96);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
