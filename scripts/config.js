@@ -71,7 +71,8 @@ export const APP_CONFIG = {
 
 /** Mensaje WhatsApp al cancelar una cita desde el panel */
 export function buildCancelWhatsAppMessage(b) {
-  return `Hola ${b.cliente.nombre}, te escribimos de Feryza Barber. Lamentamos informarte que tu cita del ${b.fecha} a las ${b.time} (${b.serviceName}) fue cancelada. Si quieres reagendar, responde a este mensaje o reserva en ${APP_CONFIG.publicUrl}. ¡Gracias!`;
+  const fecha = b.fechaLabel || b.fecha;
+  return `Hola ${b.cliente.nombre}, te escribimos de Feryza Barber. Lamentamos informarte que tu cita del ${fecha} a las ${b.time} (${b.serviceName}) fue cancelada. Si quieres reagendar, responde a este mensaje o reserva en ${APP_CONFIG.publicUrl}. Gracias.`;
 }
 
 export function getHoursForDay(dayOfWeek) {

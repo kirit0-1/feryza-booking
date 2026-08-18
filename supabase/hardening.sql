@@ -115,7 +115,7 @@ exception
 end;
 $$;
 
--- Limpia completadas/canceladas de días anteriores
+-- Solo borra canceladas de días pasados (Chile). Las completadas se quedan para contabilidad.
 create or replace function public.purge_old_bookings()
 returns void
 language sql
@@ -123,8 +123,8 @@ security definer
 set search_path = public, extensions
 as $$
   delete from public.bookings
-  where fecha < current_date
-    and status in ('completed', 'cancelled');
+  where status = 'cancelled'
+    and fecha < (timezone('America/Santiago', now()))::date;
 $$;
 
 create or replace function public.admin_list_bookings(p_pin text, p_from date, p_to date)

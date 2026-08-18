@@ -60,6 +60,46 @@ export function isValidChilePhone(phone) {
   return digits.length >= 9 && digits.length <= 11;
 }
 
+/** Número internacional para wa.me (Chile: 569XXXXXXXX) */
+export function normalizeChileWhatsApp(phone) {
+  let digits = String(phone ?? '').replace(/\D/g, '');
+  if (digits.startsWith('56')) digits = digits.slice(2);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  if (digits.length === 9 && digits.startsWith('9')) return `56${digits}`;
+  if (digits.length === 8) return `569${digits}`;
+  return digits.length ? `56${digits}` : '';
+}
+
+export function buildWhatsAppUrl(phone, text = '') {
+  const num = normalizeChileWhatsApp(phone);
+  if (!num) return 'https://wa.me/';
+  const base = `https://wa.me/${num}`;
+  return text ? `${base}?text=${encodeURIComponent(text)}` : base;
+}
+
+/** Abre WhatsApp en el mismo gesto del usuario (funciona en iPhone) */
+export function openWhatsApp(phone, text = '') {
+  const url = buildWhatsAppUrl(phone, text);
+  const a = document.createElement('a');
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+export function formatFechaISO(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-CL', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+}
+
 export function debounce(fn, ms = 300) {
   let timer;
   return (...args) => {

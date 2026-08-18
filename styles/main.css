@@ -913,11 +913,29 @@ input, select, textarea {
   text-overflow: ellipsis;
 }
 .week-event--done {
-  background: var(--surface2);
-  border-color: var(--border);
-  color: var(--muted);
-  opacity: .75;
+  background: #B8B8C0;
+  border-color: #8E8E98;
+  color: #3A3A42;
+  opacity: 1;
+  z-index: 0;
 }
+.week-event--done strong {
+  color: #2A2A32;
+  text-decoration: line-through;
+  text-decoration-color: rgba(42, 42, 50, .45);
+}
+.week-event--done span,
+.week-event--done em {
+  color: #4A4A54;
+}
+
+.admin-wa-link {
+  color: var(--wa);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.admin-wa-link:hover { color: var(--wa-dark); }
 
 .day-cal {
   display: grid;

@@ -9,7 +9,7 @@ import {
   verifyAdminPin,
   isHardeningReady,
 } from './supabase.js';
-import { formatPrice, escapeHtml, showToast } from './utils.js';
+import { formatPrice, escapeHtml, showToast, buildWhatsAppUrl, formatFechaISO } from './utils.js';
 
 const SESSION_PIN_KEY = 'feryza_admin_pin';
 const SLOT_PX = 52;
@@ -87,14 +87,11 @@ function showLogin() {
   closeSheet();
 }
 
-function normalizePhone(phone) {
-  const digits = String(phone).replace(/\D/g, '');
-  return digits.startsWith('56') ? digits : `56${digits.replace(/^0/, '')}`;
-}
-
-function whatsappUrl(phone, text = '') {
-  const base = `https://wa.me/${normalizePhone(phone)}`;
-  return text ? `${base}?text=${encodeURIComponent(text)}` : base;
+function cancelMessageFor(booking) {
+  return buildCancelWhatsAppMessage({
+    ...booking,
+    fechaLabel: formatFechaISO(booking.fecha),
+  });
 }
 
 function statusBadge(status) {
@@ -166,6 +163,16 @@ function eventClass(booking) {
   return 'week-event';
 }
 
+function renderEventLabel(b) {
+  const done = b.status === 'completed';
+  const price = done ? ` · ${formatPrice(b.total || 0)}` : '';
+  return `
+    <strong>${escapeHtml(b.time)}${done ? ' ✓' : ''}</strong>
+    <span>${escapeHtml(b.cliente.nombre)}</span>
+    <em>${escapeHtml(b.serviceName)}${price}</em>
+  `;
+}
+
 function renderDayView() {
   const iso = toISODate(cursor);
   const slots = timeSlots();
@@ -181,9 +188,7 @@ function renderDayView() {
         ${slots.map(() => `<div class="day-line" style="height:${SLOT_PX}px"></div>`).join('')}
         ${items.map((b) => `
           <button type="button" class="${eventClass(b)}" style="${eventStyle(b)}" data-open="${escapeHtml(b.id)}">
-            <strong>${escapeHtml(b.time)}</strong>
-            <span>${escapeHtml(b.cliente.nombre)}</span>
-            <em>${escapeHtml(b.serviceName)}</em>
+            ${renderEventLabel(b)}
           </button>
         `).join('')}
       </div>
@@ -222,8 +227,7 @@ function renderWeekView() {
             ${slots.map(() => `<div class="day-line" style="height:${SLOT_PX}px"></div>`).join('')}
             ${items.map((b) => `
               <button type="button" class="${eventClass(b)}" style="${eventStyle(b)}" data-open="${escapeHtml(b.id)}">
-                <strong>${escapeHtml(b.time)}</strong>
-                <span>${escapeHtml(b.cliente.nombre)}</span>
+                ${renderEventLabel(b)}
               </button>
             `).join('')}
           </div>`;
@@ -234,10 +238,26 @@ function renderWeekView() {
 }
 
 function renderCalendar() {
-  const active = bookingsCache.filter((b) => b.status === 'confirmed');
-  countEl.textContent = active.length === 0
-    ? 'Sin citas confirmadas en esta vista'
-    : `${active.length} confirmada${active.length === 1 ? '' : 's'} en esta vista`;
+  const { fromISO, toISO } = rangeISO();
+  const inView = bookingsCache.filter(
+    (b) => b.fecha >= fromISO && b.fecha <= toISO && b.status !== 'cancelled',
+  );
+  const confirmed = inView.filter((b) => b.status === 'confirmed');
+  const completed = inView.filter((b) => b.status === 'completed');
+  const totalDone = completed.reduce((sum, b) => sum + (Number(b.total) || 0), 0);
+
+  if (inView.length === 0) {
+    countEl.textContent = 'Sin citas en esta vista';
+  } else {
+    const parts = [];
+    if (confirmed.length) {
+      parts.push(`${confirmed.length} pendiente${confirmed.length === 1 ? '' : 's'}`);
+    }
+    if (completed.length) {
+      parts.push(`${completed.length} completada${completed.length === 1 ? '' : 's'} · ${formatPrice(totalDone)}`);
+    }
+    countEl.textContent = parts.join(' · ');
+  }
 
   updateCalLabel();
   if (viewMode === 'day') renderDayView();
@@ -248,23 +268,25 @@ function openSheet(id) {
   const b = bookingsCache.find((x) => x.id === id);
   if (!b) return;
   const canAct = b.status === 'confirmed';
+  const waCliente = buildWhatsAppUrl(b.cliente.telefono);
+  const cancelWaUrl = buildWhatsAppUrl(b.cliente.telefono, cancelMessageFor(b));
   sheetBody.innerHTML = `
     <div class="sheet-top">
       <h2 id="sheetTitle">${escapeHtml(b.time)} · ${escapeHtml(b.serviceName)}</h2>
       ${statusBadge(b.status)}
     </div>
     <div class="admin-card-meta">
-      <div><span class="admin-meta-label">Fecha</span> ${escapeHtml(b.fecha)}</div>
+      <div><span class="admin-meta-label">Fecha</span> ${escapeHtml(formatFechaISO(b.fecha))}</div>
       <div><span class="admin-meta-label">Cliente</span> ${escapeHtml(b.cliente.nombre)}</div>
-      <div><span class="admin-meta-label">WhatsApp</span> ${escapeHtml(b.cliente.telefono)}</div>
+      <div><span class="admin-meta-label">WhatsApp</span> <a class="admin-wa-link" href="${waCliente.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer">${escapeHtml(b.cliente.telefono)}</a></div>
       <div><span class="admin-meta-label">Pago</span> ${escapeHtml(b.pago || '—')} · ${formatPrice(b.total || 0)}</div>
     </div>
     <div class="admin-card-actions">
       ${canAct ? `
         <button type="button" class="btn-continue admin-btn-sm" data-action="complete" data-id="${escapeHtml(b.id)}">Completada</button>
-        <button type="button" class="btn-wa-cancel admin-btn-sm" data-action="cancel-wa" data-id="${escapeHtml(b.id)}">Cancelar por WhatsApp</button>
+        <a class="btn-wa-cancel admin-btn-sm" href="${cancelWaUrl.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer" data-action="cancel-wa" data-id="${escapeHtml(b.id)}">Cancelar por WhatsApp</a>
       ` : `
-        <a class="btn-sec admin-btn-sm" href="${whatsappUrl(b.cliente.telefono)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <a class="btn-sec admin-btn-sm" href="${waCliente.replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer">WhatsApp cliente</a>
       `}
     </div>
   `;
@@ -318,18 +340,6 @@ async function handleStatusChange(id, status) {
 }
 
 async function cancelViaWhatsApp(id) {
-  const booking = bookingsCache.find((b) => b.id === id);
-  if (!booking) {
-    showToast('No se encontró la cita', 'error');
-    return;
-  }
-
-  if (!confirm('Se abrirá WhatsApp con el mensaje de cancelación y la cita quedará libre. ¿Continuar?')) {
-    return;
-  }
-
-  const msg = buildCancelWhatsAppMessage(booking);
-  window.open(whatsappUrl(booking.cliente.telefono, msg), '_blank', 'noopener,noreferrer');
   await handleStatusChange(id, 'cancelled');
 }
 
@@ -404,8 +414,18 @@ sheetEl.addEventListener('click', (e) => {
   if (!btn) return;
   const { action, id } = btn.dataset;
   if (!id) return;
-  if (action === 'complete') handleStatusChange(id, 'completed');
-  if (action === 'cancel-wa') cancelViaWhatsApp(id);
+  if (action === 'complete') {
+    e.preventDefault();
+    handleStatusChange(id, 'completed');
+    return;
+  }
+  if (action === 'cancel-wa') {
+    if (!confirm('Se abrirá WhatsApp con el mensaje de cancelación y la cita quedará cancelada. ¿Continuar?')) {
+      e.preventDefault();
+      return;
+    }
+    cancelViaWhatsApp(id);
+  }
 });
 
 if (isLoggedIn()) showPanel();
