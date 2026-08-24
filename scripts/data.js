@@ -8,12 +8,11 @@ export const SERVICES = [
   {
     id: 'corte',
     name: 'Corte clásico',
-    desc: 'Fade, cejas y masaje con máquina. Sin lavado.',
+    desc: 'Fade, cejas y acabado según el cliente. Sin lavado.',
     includes: [
       'Fade',
       'Perfilado de cejas',
       'Opciones según el cliente',
-      'Masaje corto con máquina',
     ],
     price: 7000,
     dur: 45,
@@ -42,7 +41,7 @@ export const SERVICES = [
     desc: '4 cortes en 30 días. Ahorras $6.000.',
     includes: [
       '4 visitas de corte clásico',
-      'Fade, cejas y masaje con máquina',
+      'Fade, cejas y acabado según el cliente',
       'Válida 30 días desde la compra',
       'La barba se puede sumar en cada visita',
     ],

@@ -52,6 +52,7 @@
         <div class="admin-toolbar-actions">
           <button type="button" class="btn-sec admin-btn-sm" id="btnCalDay">Día</button>
           <button type="button" class="btn-sec admin-btn-sm" id="btnCalWeek">Semana</button>
+          <button type="button" class="btn-sec admin-btn-sm" id="btnVacaciones">Vacaciones</button>
           <button type="button" class="btn-sec admin-btn-sm" id="btnRefresh" aria-label="Actualizar">Actualizar</button>
           <button type="button" class="btn-sec admin-btn-sm" id="btnLogout">Salir</button>
         </div>
@@ -76,6 +77,13 @@
       <button type="button" class="admin-sheet-backdrop" id="sheetClose" aria-label="Cerrar"></button>
       <div class="admin-sheet-panel">
         <div id="sheetBody"></div>
+      </div>
+    </div>
+
+    <div class="admin-sheet hidden" id="vacacionesSheet" role="dialog" aria-modal="true" aria-labelledby="vacTitle">
+      <button type="button" class="admin-sheet-backdrop" id="vacClose" aria-label="Cerrar"></button>
+      <div class="admin-sheet-panel admin-sheet-panel--wide">
+        <div id="vacBody"></div>
       </div>
     </div>
   </main>

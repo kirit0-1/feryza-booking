@@ -8,6 +8,9 @@ import {
   updateBookingStatus,
   verifyAdminPin,
   isHardeningReady,
+  fetchAdminBlocks,
+  createAdminBlock,
+  deleteAdminBlock,
 } from './supabase.js';
 import { formatPrice, escapeHtml, showToast, buildWhatsAppUrl, formatFechaISO } from './utils.js';
 
@@ -28,8 +31,11 @@ const pinError = document.getElementById('pinError');
 const calLabel = document.getElementById('adminCalLabel');
 const sheetEl = document.getElementById('adminSheet');
 const sheetBody = document.getElementById('sheetBody');
+const vacSheet = document.getElementById('vacacionesSheet');
+const vacBody = document.getElementById('vacBody');
 
 let bookingsCache = [];
+let blocksCache = [];
 let viewMode = window.innerWidth < 800 ? 'day' : 'week';
 let cursor = startOfDay(new Date());
 
@@ -85,6 +91,7 @@ function showLogin() {
   pinInput.value = '';
   pinError.textContent = '';
   closeSheet();
+  closeVacSheet();
 }
 
 function cancelMessageFor(booking) {
@@ -163,6 +170,30 @@ function eventClass(booking) {
   return 'week-event';
 }
 
+function blocksForFecha(iso) {
+  return blocksCache.filter((b) => iso >= b.fechaFrom && iso <= b.fechaTo);
+}
+
+function blockStyle(block) {
+  if (!block.timeFrom || !block.timeTo) {
+    const height = ((GRID_END - GRID_START) / INTERVAL) * SLOT_PX - 4;
+    return `top:0;height:${height}px`;
+  }
+  const start = parseMinutes(block.timeFrom);
+  const end = parseMinutes(block.timeTo);
+  const top = ((start - GRID_START) / INTERVAL) * SLOT_PX;
+  const height = Math.max(((end - start) / INTERVAL) * SLOT_PX - 4, 36);
+  return `top:${top}px;height:${height}px`;
+}
+
+function renderBlockLabel(b) {
+  const range = b.timeFrom && b.timeTo
+    ? `${escapeHtml(b.timeFrom)}–${escapeHtml(b.timeTo)}`
+    : 'Día completo';
+  const note = b.note ? escapeHtml(b.note) : 'Vacaciones / cierre';
+  return `<strong>${range}</strong><span>${note}</span>`;
+}
+
 function renderEventLabel(b) {
   const done = b.status === 'completed';
   const price = done ? ` · ${formatPrice(b.total || 0)}` : '';
@@ -186,6 +217,11 @@ function renderDayView() {
       </div>
       <div class="day-track" style="height:${height}px">
         ${slots.map(() => `<div class="day-line" style="height:${SLOT_PX}px"></div>`).join('')}
+        ${blocksForFecha(iso).map((b) => `
+          <div class="week-event week-event--blocked" style="${blockStyle(b)}" title="${escapeHtml(b.note || 'Bloqueado')}">
+            ${renderBlockLabel(b)}
+          </div>
+        `).join('')}
         ${items.map((b) => `
           <button type="button" class="${eventClass(b)}" style="${eventStyle(b)}" data-open="${escapeHtml(b.id)}">
             ${renderEventLabel(b)}
@@ -225,6 +261,11 @@ function renderWeekView() {
           const items = bookingsForFecha(iso);
           return `<div class="week-col" style="height:${height}px">
             ${slots.map(() => `<div class="day-line" style="height:${SLOT_PX}px"></div>`).join('')}
+            ${blocksForFecha(iso).map((b) => `
+              <div class="week-event week-event--blocked" style="${blockStyle(b)}" title="${escapeHtml(b.note || 'Bloqueado')}">
+                ${renderBlockLabel(b)}
+              </div>
+            `).join('')}
             ${items.map((b) => `
               <button type="button" class="${eventClass(b)}" style="${eventStyle(b)}" data-open="${escapeHtml(b.id)}">
                 ${renderEventLabel(b)}
@@ -246,7 +287,7 @@ function renderCalendar() {
   const completed = inView.filter((b) => b.status === 'completed');
   const totalDone = completed.reduce((sum, b) => sum + (Number(b.total) || 0), 0);
 
-  if (inView.length === 0) {
+  if (inView.length === 0 && blocksCache.length === 0) {
     countEl.textContent = 'Sin citas en esta vista';
   } else {
     const parts = [];
@@ -256,7 +297,10 @@ function renderCalendar() {
     if (completed.length) {
       parts.push(`${completed.length} completada${completed.length === 1 ? '' : 's'} · ${formatPrice(totalDone)}`);
     }
-    countEl.textContent = parts.join(' · ');
+    if (blocksCache.length) {
+      parts.push(`${blocksCache.length} bloqueo${blocksCache.length === 1 ? '' : 's'}`);
+    }
+    countEl.textContent = parts.join(' · ') || 'Sin citas en esta vista';
   }
 
   updateCalLabel();
@@ -308,13 +352,23 @@ async function loadBookings() {
 
   const hardened = await isHardeningReady();
   configWarn.classList.toggle('hidden', hardened);
+  if (hardened) {
+    /* ok */
+  } else {
+    configWarn.innerHTML = 'Ejecuta <code>supabase/hardening.sql</code> y <code>supabase/patch-vacaciones.sql</code> en el SQL Editor de Supabase.';
+  }
 
   countEl.textContent = 'Cargando…';
   listEl.innerHTML = '<p class="admin-loading">Cargando agenda…</p>';
 
   try {
     const { fromISO, toISO } = rangeISO();
-    bookingsCache = await fetchAdminBookings(getPin(), { fromISO, toISO });
+    const [bookings, blocks] = await Promise.all([
+      fetchAdminBookings(getPin(), { fromISO, toISO }),
+      fetchAdminBlocks(getPin(), { fromISO, toISO }),
+    ]);
+    bookingsCache = bookings;
+    blocksCache = blocks;
     renderCalendar();
   } catch (err) {
     console.error('[admin] Error al cargar:', err);
@@ -341,6 +395,131 @@ async function handleStatusChange(id, status) {
 
 async function cancelViaWhatsApp(id) {
   await handleStatusChange(id, 'cancelled');
+}
+
+function closeVacSheet() {
+  vacSheet.classList.add('hidden');
+  vacBody.innerHTML = '';
+}
+
+function formatBlockRow(b) {
+  const dates = b.fechaFrom === b.fechaTo
+    ? formatFechaISO(b.fechaFrom)
+    : `${formatFechaISO(b.fechaFrom)} → ${formatFechaISO(b.fechaTo)}`;
+  const hours = b.timeFrom && b.timeTo
+    ? `${b.timeFrom}–${b.timeTo}`
+    : 'Día completo';
+  const note = b.note || 'Sin nota';
+  return `
+    <div class="vac-item">
+      <div>
+        <strong>${escapeHtml(dates)}</strong>
+        <span>${escapeHtml(hours)} · ${escapeHtml(note)}</span>
+      </div>
+      <button type="button" class="btn-sec admin-btn-sm" data-vac-del="${escapeHtml(b.id)}">Quitar</button>
+    </div>
+  `;
+}
+
+function openVacaciones() {
+  const today = toISODate(new Date());
+  const mon = mondayOf(cursor);
+  const sun = addDays(mon, 6);
+  vacBody.innerHTML = `
+    <div class="sheet-top">
+      <h2 id="vacTitle">Vacaciones / cierres</h2>
+    </div>
+    <p class="admin-sub">Bloquea días, semanas o un rango de horas. Los clientes no verán horas en esos periodos.</p>
+    <form id="vacForm" class="vac-form">
+      <label class="field">
+        <span>Desde</span>
+        <input type="date" id="vacFrom" required value="${today}">
+      </label>
+      <label class="field">
+        <span>Hasta</span>
+        <input type="date" id="vacTo" required value="${today}">
+      </label>
+      <label class="field">
+        <span>Hora inicio <span class="label-optional">(opcional)</span></span>
+        <input type="time" id="vacTimeFrom" step="900">
+      </label>
+      <label class="field">
+        <span>Hora fin <span class="label-optional">(opcional)</span></span>
+        <input type="time" id="vacTimeTo" step="900">
+      </label>
+      <label class="field vac-form-full">
+        <span>Nota</span>
+        <input type="text" id="vacNote" maxlength="80" placeholder="Ej: Vacaciones, feriado, cierre">
+      </label>
+      <div class="vac-form-actions vac-form-full">
+        <button type="button" class="btn-sec admin-btn-sm" id="vacWeekBtn">Bloquear semana vista</button>
+        <button type="submit" class="btn-continue admin-btn-sm">Bloquear</button>
+      </div>
+    </form>
+    <div class="vac-list-title">Bloqueos en esta vista</div>
+    <div class="vac-list" id="vacList">
+      ${blocksCache.length
+        ? blocksCache.map(formatBlockRow).join('')
+        : '<p class="admin-empty-hint">No hay bloqueos en el rango actual.</p>'}
+    </div>
+    <p class="admin-empty-hint">Semana vista: ${toISODate(mon)} → ${toISODate(sun)}</p>
+  `;
+  vacSheet.classList.remove('hidden');
+
+  document.getElementById('vacWeekBtn').addEventListener('click', () => {
+    document.getElementById('vacFrom').value = toISODate(mon);
+    document.getElementById('vacTo').value = toISODate(sun);
+    document.getElementById('vacTimeFrom').value = '';
+    document.getElementById('vacTimeTo').value = '';
+    document.getElementById('vacNote').value = 'Vacaciones / semana bloqueada';
+  });
+
+  document.getElementById('vacForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fechaFrom = document.getElementById('vacFrom').value;
+    const fechaTo = document.getElementById('vacTo').value;
+    let timeFrom = document.getElementById('vacTimeFrom').value || null;
+    let timeTo = document.getElementById('vacTimeTo').value || null;
+    if (timeFrom) timeFrom = timeFrom.slice(0, 5);
+    if (timeTo) timeTo = timeTo.slice(0, 5);
+    const note = document.getElementById('vacNote').value.trim();
+
+    if (timeFrom && timeFrom.length === 5) {/* ok */}
+    if (timeFrom && !timeTo) {
+      showToast('Indica hora fin o deja ambas vacías (día completo)', 'error');
+      return;
+    }
+    if (!timeFrom && timeTo) {
+      showToast('Indica hora inicio o deja ambas vacías', 'error');
+      return;
+    }
+    if (timeFrom && timeTo && timeFrom >= timeTo) {
+      showToast('La hora fin debe ser después de la de inicio', 'error');
+      return;
+    }
+    if (fechaTo < fechaFrom) {
+      showToast('La fecha hasta no puede ser anterior', 'error');
+      return;
+    }
+
+    try {
+      await createAdminBlock(getPin(), {
+        fechaFrom,
+        fechaTo,
+        timeFrom,
+        timeTo,
+        note: note || 'Vacaciones / cierre',
+      });
+      showToast('Horario bloqueado', 'success');
+      closeVacSheet();
+      await loadBookings();
+    } catch (err) {
+      console.error('[admin] bloqueo:', err);
+      showToast(err.message?.includes('function') || err.message?.includes('Could not find')
+        ? 'Ejecuta supabase/patch-vacaciones.sql en Supabase'
+        : 'No se pudo bloquear', 'error');
+    }
+  });
 }
 
 pinForm.addEventListener('submit', async (e) => {
@@ -374,6 +553,30 @@ document.getElementById('btnLogout').addEventListener('click', () => {
 
 document.getElementById('btnRefresh').addEventListener('click', () => {
   loadBookings();
+});
+
+document.getElementById('btnVacaciones').addEventListener('click', () => {
+  openVacaciones();
+});
+
+document.getElementById('vacClose').addEventListener('click', () => {
+  closeVacSheet();
+});
+
+vacSheet.addEventListener('click', async (e) => {
+  const del = e.target.closest('[data-vac-del]');
+  if (!del) return;
+  const id = del.dataset.vacDel;
+  if (!confirm('¿Quitar este bloqueo? Los clientes podrán reservar de nuevo en ese rango.')) return;
+  try {
+    await deleteAdminBlock(getPin(), id);
+    showToast('Bloqueo eliminado', 'success');
+    closeVacSheet();
+    await loadBookings();
+  } catch (err) {
+    console.error('[admin] quitar bloqueo:', err);
+    showToast('No se pudo eliminar el bloqueo', 'error');
+  }
 });
 
 document.getElementById('btnCalDay').addEventListener('click', () => {

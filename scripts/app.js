@@ -379,7 +379,9 @@ async function confirmarReserva() {
     console.error('[app] Error al confirmar:', err);
     const msg = err?.code === 'SLOT_TAKEN'
       ? err.message
-      : 'No se pudo confirmar la reserva. Intenta otro horario.';
+      : err?.code === 'SLOT_BLOCKED'
+        ? err.message
+        : 'No se pudo confirmar la reserva. Intenta otro horario.';
     showToast(msg, 'error');
     btn.disabled = false;
     btn.innerHTML = `Confirmar reserva <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>`;

@@ -1,9 +1,13 @@
 {
   "name": "feryza-booking",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
+  "description": "Reservas Feryza Barber — estático, listo para Vercel o GitHub Pages",
   "scripts": {
-    "dev": "npx serve . -l 3001",
-    "start": "npx serve . -l 3001"
+    "dev": "npx --yes serve . -l 3001",
+    "start": "npx --yes serve . -l 3001"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

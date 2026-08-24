@@ -3,13 +3,14 @@
  * Intervalos fijos de 45 min + horarios por día. Persistencia: Supabase (o localStorage mock).
  */
 
-import { APP_CONFIG, getHoursForDay, useLocalAvailability } from './config.js';
-import { BARBERS, getRealBarberIds } from './data.js';
-import { parseTime, formatTime } from './utils.js';
 import {
   fetchConfirmedBookings,
   insertBooking,
+  fetchBlockedPeriods,
 } from './supabase.js';
+import { parseTime, formatTime } from './utils.js';
+import { APP_CONFIG, getHoursForDay, useLocalAvailability } from './config.js';
+import { BARBERS, getRealBarberIds } from './data.js';
 
 const { bookingsKey } = APP_CONFIG.storage;
 const { slotInterval } = APP_CONFIG.businessHours;
@@ -92,14 +93,43 @@ export async function getAvailableSlots(barberoId, fecha, durationMin) {
   return getAvailableSlotsForBarber(barberoId, fecha, durationMin);
 }
 
+function blockOverlapsSlot(block, fecha, slotStart, durationMin) {
+  if (fecha < block.fechaFrom || fecha > block.fechaTo) return false;
+  if (!block.timeFrom || !block.timeTo) return true;
+  const bStart = parseTime(block.timeFrom);
+  const bEnd = parseTime(block.timeTo);
+  return slotStart < bEnd && slotStart + durationMin > bStart;
+}
+
+async function fetchBlocksForDay(fecha, barberoId) {
+  if (useLocalAvailability()) return [];
+  try {
+    return await fetchBlockedPeriods({
+      fromISO: fecha,
+      toISO: fecha,
+      barberId: barberoId === 'any' ? null : barberoId,
+    });
+  } catch (err) {
+    console.error('[availability] Error bloques:', err);
+    return [];
+  }
+}
+
 async function getAvailableSlotsForBarber(barberoId, fecha, durationMin) {
   const day = dayOfWeekFromISO(fecha);
   const daySlots = generateTimeSlotsForDay(day);
-  const bookings = await fetchBookings(barberoId, fecha);
+  const [bookings, blocks] = await Promise.all([
+    fetchBookings(barberoId, fecha),
+    fetchBlocksForDay(fecha, barberoId),
+  ]);
 
   return daySlots.filter((slot) => {
     const slotStart = parseTime(slot);
     if (!fitsBusinessHours(slotStart, durationMin, day)) return false;
+
+    if (blocks.some((b) => blockOverlapsSlot(b, fecha, slotStart, durationMin))) {
+      return false;
+    }
 
     return !bookings.some((b) => {
       if (b.barberId !== barberoId) return false;

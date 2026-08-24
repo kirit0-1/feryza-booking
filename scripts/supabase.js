@@ -133,6 +133,12 @@ export async function insertBooking(record) {
     throw slotErr;
   }
 
+  if (`${error.message}`.includes('SLOT_BLOCKED') || `${error.message}`.includes('blocked')) {
+    const blockErr = new Error('Ese horario está bloqueado (vacaciones o cierre). Elige otro día u hora.');
+    blockErr.code = 'SLOT_BLOCKED';
+    throw blockErr;
+  }
+
   if (!isMissingRpc(error)) throw error;
 
   const row = {
@@ -216,6 +222,73 @@ export async function updateBookingStatus(pin, id, status) {
 
   if (fallback.error) throw fallback.error;
   return mapBookingRow(fallback.data);
+}
+
+function mapBlockRow(row) {
+  return {
+    id: row.id,
+    barberId: row.barber_id ?? null,
+    fechaFrom: row.fecha_from,
+    fechaTo: row.fecha_to,
+    timeFrom: row.time_from ?? null,
+    timeTo: row.time_to ?? null,
+    note: row.note ?? '',
+    createdAt: row.created_at,
+  };
+}
+
+export async function fetchBlockedPeriods({ fromISO, toISO, barberId = null }) {
+  const sb = getClient();
+  const { data, error } = await sb.rpc('get_blocked_periods', {
+    p_from: fromISO,
+    p_to: toISO,
+    p_barber_id: barberId,
+  });
+  if (error) {
+    if (isMissingRpc(error)) return [];
+    throw error;
+  }
+  return (data ?? []).map(mapBlockRow);
+}
+
+export async function fetchAdminBlocks(pin, { fromISO, toISO }) {
+  const sb = getClient();
+  const { data, error } = await sb.rpc('admin_list_blocks', {
+    p_pin: pin,
+    p_from: fromISO,
+    p_to: toISO,
+  });
+  if (error) {
+    if (isMissingRpc(error)) return [];
+    throw error;
+  }
+  return (data ?? []).map(mapBlockRow);
+}
+
+export async function createAdminBlock(pin, block) {
+  const sb = getClient();
+  const { data, error } = await sb.rpc('admin_create_block', {
+    p_pin: pin,
+    p_fecha_from: block.fechaFrom,
+    p_fecha_to: block.fechaTo,
+    p_time_from: block.timeFrom || null,
+    p_time_to: block.timeTo || null,
+    p_note: block.note || '',
+    p_barber_id: block.barberId || null,
+  });
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : data;
+  return mapBlockRow(row);
+}
+
+export async function deleteAdminBlock(pin, id) {
+  const sb = getClient();
+  const { error } = await sb.rpc('admin_delete_block', {
+    p_pin: pin,
+    p_id: id,
+  });
+  if (error) throw error;
+  return true;
 }
 
 /** @deprecated usar fetchAdminBookings */

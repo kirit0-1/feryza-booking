@@ -1,74 +1,53 @@
 # Feryza Barber — Reservas online
 
-App de reservas para **Feryza Barber**. Las citas se guardan en **Supabase** (visibles para todos) y el barbero las gestiona en un panel con PIN. El correo al barbero va a `Fernandoisaias2606@gmail.com` vía EmailJS.
+App estática de reservas (HTML/JS + Supabase). Sin build: lista para **GitHub Pages** o **Vercel**.
 
 **Demo:** https://kirit0-1.github.io/feryza-booking/  
-**Panel barbero:** https://kirit0-1.github.io/feryza-booking/admin.html
+**Panel:** https://kirit0-1.github.io/feryza-booking/admin.html · PIN `feryza2026`
 
-## Datos del negocio
+## Qué incluye
 
-| Dato | Valor |
-|------|--------|
-| WhatsApp | +56 9 7960 8342 |
-| Correo | Fernandoisaias2606@gmail.com |
-| Lun–Sáb | 10:00 – 21:00 |
-| Domingo | 11:00 – 14:00 |
-| Intervalos | 45 min |
-| PIN panel (demo) | `feryza2026` |
+- Reserva móvil (servicio → horario → datos → pago)
+- Panel día/semana, completar / cancelar por WhatsApp
+- Citas completadas en gris (caja del día)
+- **Vacaciones:** bloquear días, semanas o franjas horarias
+- Efectivo y transferencia · 100% marca del local
 
-### Servicios
+## Setup Supabase
 
-| Servicio | Precio | Duración |
-|----------|--------|----------|
-| El corte | $7.000 | 45 min |
-| Perfilado de barba | $3.000 | 45 min |
-| Membresía 4 cortes / mes | $22.000 | 45 min |
-
-## Setup (checklist)
-
-### 1. Supabase
-
-1. Crea un proyecto en [supabase.com](https://supabase.com).
-2. En **SQL Editor**, pega y ejecuta el contenido de [`supabase/schema.sql`](supabase/schema.sql).
-3. En **Project Settings → API**, copia:
-   - **Project URL** → `APP_CONFIG.supabase.url` en [`scripts/config.js`](scripts/config.js)  
-     *(aún pendiente: pega la URL real `https://XXXX.supabase.co` desde Dashboard → Settings → API → Project URL; la anon/publishable key ya está en el frontend)*
-   - **anon public** / publishable key → `APP_CONFIG.supabase.anonKey` (ya configurada)
-4. Deja `features.useMockAvailability: false` (ya viene así). Si falta la Project URL, la app cae a `localStorage` solo en ese navegador.
-
-### 2. EmailJS (opcional en demo)
-
-Sin EmailJS la reserva **igual se guarda** en Supabase; el toast avisa que revises el panel.
-
-1. Crea cuenta en [emailjs.com](https://www.emailjs.com).
-2. Conecta un servicio de correo (Gmail u otro).
-3. Crea **2 plantillas**: una para el cliente y otra para el barbero (usa `to_email`, `servicio`, `fecha`, `hora`, `pago`, `total`, `telefono`, `cliente` / `to_name`).
-4. En la plantilla del barbero, el destinatario debe usar `{{to_email}}` (la app fuerza `Fernandoisaias2606@gmail.com`).
-5. Pega en `config.js`: `serviceId`, `templateClienteId`, `templateBarberoId`, `publicKey`.
-
-### 3. Panel del barbero
-
-- URL: `/admin.html`
-- PIN demo en `APP_CONFIG.admin.pin` → `feryza2026`
-- Acciones: **Completada** / **Cancelar** (liberan el horario porque solo `confirmed` bloquea slots).
-
-### 4. Deploy (GitHub Pages)
-
-Push a `main` activa Pages automáticamente (workflow en `.github/workflows/`).
+1. Proyecto nuevo: ejecuta `supabase/schema.sql` (incluye vacaciones).
+2. Proyecto ya vivo: ejecuta, en orden si falta algo:
+   - `supabase/hardening.sql`
+   - `supabase/patch-purge-completadas.sql`
+   - **`supabase/patch-vacaciones.sql`** ← obligatorio para el botón Vacaciones
+3. URL y anon key en `scripts/config.js` (ya configuradas en la demo).
 
 ## Local
 
 ```bash
 cd feryza-booking
-npx serve . -l 3001
+npm run dev
 ```
 
-Abre `http://localhost:3001` y `http://localhost:3001/admin.html`.
+Abre http://localhost:3001 y http://localhost:3001/admin.html
 
-## Arquitectura
+## Deploy
 
-```
-Cliente (index.html)  →  insert/select  →  Supabase bookings
-Admin (admin.html)    →  list/update    →  Supabase bookings
-Cliente               →  EmailJS        →  Fernandoisaias2606@gmail.com
-```
+### GitHub Pages (actual)
+
+Push a `main` → workflow `.github/workflows/deploy-pages.yml`.
+
+### Vercel (próximo, con dominio)
+
+1. Importa el repo en [vercel.com](https://vercel.com).
+2. Framework preset: **Other** · Build: vacío · Output: `.`
+3. `vercel.json` ya tiene headers de caché y seguridad.
+4. Cuando tengas dominio, actualiza `APP_CONFIG.publicUrl` en `scripts/config.js`.
+
+Sin dependencias npm en producción: solo archivos estáticos + CDN de Supabase.
+
+## Notas de producto
+
+- Llegar **10 min antes**; la cita se confirma en el último paso.
+- Corte clásico ya no incluye masaje (máquina fuera de servicio).
+- Cada feature extra se cotiza aparte; esta es la versión final en GitHub hasta dominio propio.

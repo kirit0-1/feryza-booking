@@ -44,6 +44,7 @@
         <h1 class="step-title">¿Qué servicio necesitas?</h1>
         <p class="step-sub">Elige uno para continuar</p>
         <p class="hours-hint">Lun–Sáb 10:00–21:00 · Dom 11:00–14:00 · turnos cada 45 min</p>
+        <p class="policy-hint">Llega <strong>10 minutos antes</strong> de tu hora. Confirma la reserva en el último paso para que quede agendada.</p>
         <div class="card-grid" id="servicios-list"></div>
         <div class="barba-addon hidden" id="barbaAddon"></div>
         <button class="btn-continue" id="btn1" disabled>
@@ -64,7 +65,7 @@
 
       <div class="step-panel" id="step3">
         <h1 class="step-title">Elige día y hora</h1>
-        <p class="step-sub">Disponibilidad en turnos de 45 minutos</p>
+        <p class="step-sub">Turnos de 45 min · llega 10 minutos antes</p>
         <div class="calendar-wrap">
           <div class="cal-header">
             <button class="cal-nav" id="calPrev" aria-label="Mes anterior">
@@ -120,8 +121,11 @@
         <div class="bank-box hidden" id="bankBox" aria-live="polite"></div>
         <div class="divider"></div>
         <div class="summary-mobile" id="summaryMobile"></div>
+        <div class="policy-box" role="note">
+          <strong>Importante:</strong> al confirmar, tu hora queda reservada. Llega <strong>10 minutos antes</strong>. Si no puedes asistir, avísanos por WhatsApp.
+        </div>
         <button class="btn-continue" id="btn5" disabled>
-          Confirmar reserva
+          Confirmar mi cita
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg>
         </button>
       </div>
@@ -131,8 +135,8 @@
           <div class="confirm-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
-          <h1 class="confirm-title">¡Reserva confirmada!</h1>
-          <p class="confirm-sub">Te esperamos en Feryza Barber. Si necesitas algo, escríbenos por WhatsApp.</p>
+          <h1 class="confirm-title">¡Cita confirmada!</h1>
+          <p class="confirm-sub">Tu hora ya quedó agendada. Llega <strong>10 minutos antes</strong>. Si necesitas algo, escríbenos por WhatsApp.</p>
           <div class="confirm-detail" id="confirmDetail"></div>
           <div class="confirm-actions">
             <a class="btn-wa" id="confirmWa" href="#" target="_blank" rel="noopener noreferrer">
@@ -160,7 +164,7 @@
         <div class="summary-body" id="summaryBody"></div>
         <div class="summary-foot">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-          Confirma en el paso 5
+          Confirma en el paso 5 · llega 10 min antes
         </div>
       </div>
     </aside>
