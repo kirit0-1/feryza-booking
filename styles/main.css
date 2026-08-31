@@ -468,6 +468,18 @@ input, select, textarea {
   transition: background var(--transition);
 }
 .btn-wa:hover { background: var(--wa-dark); }
+.btn-confirm-wa {
+  background: var(--wa) !important;
+  color: #fff !important;
+  border-color: var(--ink-hard) !important;
+}
+.btn-confirm-wa:hover:not(:disabled) {
+  background: var(--wa-dark) !important;
+}
+.btn-confirm-wa svg {
+  width: 20px;
+  height: 20px;
+}
 .btn-wa-cancel {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   background: var(--wa); color: #fff;
