@@ -163,13 +163,24 @@ function renderBarbaAddon() {
   wrap.classList.toggle('hidden', !show);
   if (!show) return;
 
+  const isCorte = state.service?.id === 'corte';
+  const title = isCorte
+    ? '🔥 Promo: Corte + Barba por $10.000'
+    : '¿Sumas la barba?';
+  const desc = isCorte
+    ? `Suma barba por solo +${formatPrice(BARBA_ADDON_PRICE)} en el mismo turno (Ahorras $1.000)`
+    : `Perfilado en el mismo turno de 45 min · +${formatPrice(BARBA_ADDON_PRICE)}`;
+  const actionText = state.addBarba
+    ? (isCorte ? 'Promo aplicada ✓' : 'Agregada ✓')
+    : (isCorte ? 'Aprovechar promo' : 'Agregar');
+
   wrap.innerHTML = `
     <button type="button" class="addon-card${state.addBarba ? ' selected' : ''}" id="btnAddBarba">
       <div class="addon-copy">
-        <div class="addon-title">¿Sumas la barba?</div>
-        <div class="addon-desc">Perfilado en el mismo turno de 45 min · +${formatPrice(BARBA_ADDON_PRICE)}</div>
+        <div class="addon-title">${escapeHtml(title)}</div>
+        <div class="addon-desc">${desc}</div>
       </div>
-      <div class="addon-price">${state.addBarba ? 'Agregada' : 'Agregar'}</div>
+      <div class="addon-price">${actionText}</div>
     </button>
   `;
 

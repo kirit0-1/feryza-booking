@@ -2,7 +2,7 @@
  * data.js — Catálogo Feryza Barber
  */
 
-export const BARBA_ADDON_PRICE = 3000;
+export const BARBA_ADDON_PRICE = 2000;
 
 export const SERVICES = [
   {
@@ -14,7 +14,7 @@ export const SERVICES = [
       'Perfilado de cejas',
       'Opciones según el cliente',
     ],
-    price: 7000,
+    price: 8000,
     dur: 45,
     icon: 'corte',
     featured: true,
@@ -38,14 +38,14 @@ export const SERVICES = [
   {
     id: 'membresia-4',
     name: 'Membresía 4 cortes',
-    desc: '4 cortes en 30 días. Ahorras $6.000.',
+    desc: '4 cortes en 30 días. Ahorras $8.000.',
     includes: [
       '4 visitas de corte clásico',
       'Fade, cejas y acabado según el cliente',
       'Válida 30 días desde la compra',
       'La barba se puede sumar en cada visita',
     ],
-    price: 22000,
+    price: 24000,
     dur: 45,
     icon: 'membresia',
     featured: false,
@@ -103,12 +103,15 @@ export function findPaymentById(id) {
 export function getActiveService(service, addBarba) {
   if (!service) return null;
   if (!addBarba || !service.allowBarbaAddon) return service;
+  const isCorte = service.id === 'corte';
   return {
     ...service,
     id: `${service.id}-barba`,
-    name: `${service.name} + barba`,
-    desc: `${service.desc} Incluye perfilado de barba.`,
+    name: isCorte ? 'Promo: Corte + barba' : `${service.name} + barba`,
+    desc: isCorte
+      ? 'Corte clásico + perfilado de barba en promo por $10.000.'
+      : `${service.desc} Incluye perfilado de barba.`,
     price: service.price + BARBA_ADDON_PRICE,
-    includes: [...(service.includes ?? []), 'Perfilado de barba en el mismo turno'],
+    includes: [...(service.includes ?? []), 'Perfilado de barba en el mismo turno (Promo $10.000)'],
   };
 }
