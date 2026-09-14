@@ -3,6 +3,9 @@
  */
 
 export const BARBA_ADDON_PRICE = 2000;
+/** Precio fijo de sobrecupo (solo a coordinar con el barbero) */
+export const SOBRECUPO_PRICE = 10000;
+export const SOBRECUPO_TIME_LABEL = 'A coordinar';
 
 export const SERVICES = [
   {

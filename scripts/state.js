@@ -14,6 +14,7 @@ export function createInitialState() {
     barber: null,
     date: null,
     time: null,
+    sobrecupo: false,
     nombre: '',
     telefono: '',
     correo: '',
@@ -35,6 +36,7 @@ export function saveState() {
     barberId: state.barber?.id ?? null,
     date: state.date,
     time: state.time,
+    sobrecupo: !!state.sobrecupo,
     nombre: state.nombre,
     telefono: state.telefono,
     correo: state.correo,
@@ -71,6 +73,7 @@ export function restoreState() {
     state.barber = saved.barberId ? findBarberById(saved.barberId) : null;
     state.date = saved.date ?? null;
     state.time = saved.time ?? null;
+    state.sobrecupo = !!saved.sobrecupo;
     state.nombre = saved.nombre ?? '';
     state.telefono = saved.telefono ?? '';
     state.correo = saved.correo ?? '';

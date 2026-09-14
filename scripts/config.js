@@ -25,7 +25,7 @@ export const APP_CONFIG = {
 
   storage: {
     stateKey: 'feryza_booking_state',
-    stateVersion: 2,
+    stateVersion: 3,
     stateTtlMs: 30 * 60 * 1000,
     bookingsKey: 'feryza_bookings',
   },

@@ -3,7 +3,7 @@
  */
 
 import { APP_CONFIG } from './config.js';
-import { SERVICES, BARBERS, PAYMENT_METHODS, BANK_DETAILS, BARBA_ADDON_PRICE, getActiveService } from './data.js';
+import { SERVICES, BARBERS, PAYMENT_METHODS, BANK_DETAILS, BARBA_ADDON_PRICE, SOBRECUPO_PRICE, getActiveService } from './data.js';
 import { state, saveState, clearStorage, restoreState, resetState } from './state.js';
 import { initCalendar, renderCalendar, renderSlots, refreshSlotsIfNeeded, resetCalendarView } from './calendar.js';
 import { buildCalendarURL } from './calendar-url.js';
@@ -78,10 +78,25 @@ function updateWhatsAppFab(step) {
   document.getElementById('whatsappFab').classList.toggle('hidden', step === 6);
 }
 
+function getBookingDisplay() {
+  const active = getActiveService(state.service, state.addBarba);
+  if (!active) return null;
+  if (state.sobrecupo) {
+    return {
+      ...active,
+      name: `⚠️ SOBRECUPO — ${active.name}`,
+      price: SOBRECUPO_PRICE,
+      dur: active.dur,
+      isSobrecupo: true,
+    };
+  }
+  return { ...active, isSobrecupo: false };
+}
+
 function updateMobileSummaryBar() {
   const bar = document.getElementById('mobileSummaryBar');
   const step = state.currentStep;
-  const active = getActiveService(state.service, state.addBarba);
+  const active = getBookingDisplay();
   const show = step >= 2 && step <= 5 && active;
 
   if (!show) {
@@ -91,7 +106,8 @@ function updateMobileSummaryBar() {
 
   const parts = [active.name];
   if (state.barber) parts.push(state.barber.name);
-  if (state.time) parts.push(state.time);
+  if (state.sobrecupo) parts.push('A coordinar');
+  else if (state.time) parts.push(state.time);
 
   bar.classList.remove('hidden');
   bar.innerHTML = `
@@ -327,12 +343,12 @@ function renderPago() {
 }
 
 function buildSummaryRows() {
-  const active = getActiveService(state.service, state.addBarba);
+  const active = getBookingDisplay();
   const rows = [
     { icon: SUMMARY_ICONS.scissors, label: 'Servicio', val: active?.name, num: active ? formatPrice(active.price) : null },
     { icon: SUMMARY_ICONS.person, label: 'Barbero', val: state.barber?.name },
     { icon: SUMMARY_ICONS.cal, label: 'Fecha', val: formatDateShort(state.date) },
-    { icon: SUMMARY_ICONS.clock, label: 'Hora', val: state.time },
+    { icon: SUMMARY_ICONS.clock, label: 'Hora', val: state.sobrecupo ? 'A coordinar (sobrecupo)' : state.time },
     { icon: SUMMARY_ICONS.pay, label: 'Pago', val: state.pago?.name },
   ];
 
@@ -354,45 +370,61 @@ function updateSummary() {
   document.getElementById('summaryMobile').innerHTML = state.currentStep === 5
     ? `<div class="summary-mobile-box"><div class="summary-mobile-title">Resumen</div>${rows}</div>`
     : '';
+
+  const policy = document.querySelector('#step5 .policy-box');
+  if (policy) {
+    policy.innerHTML = state.sobrecupo
+      ? `<strong>⚠️ SOBRECUPO:</strong> Al confirmar se abrirá WhatsApp para <strong>coordinar el horario con el barbero</strong>. Valor fijo <strong>${formatPrice(SOBRECUPO_PRICE)}</strong>. No es una hora del calendario.`
+      : `<strong>⚠️ Paso final:</strong> Al presionar <strong>"Confirmar cita por WhatsApp"</strong> se guardará tu hora y se abrirá WhatsApp con el mensaje listo para enviar. Recuerda llegar <strong>10 minutos antes</strong> de tu turno.`;
+  }
 }
 
 async function confirmarReserva() {
   const btn = document.getElementById('btn5');
   btn.disabled = true;
-  btn.textContent = 'Guardando cita…';
+  btn.textContent = state.sobrecupo ? 'Preparando sobrecupo…' : 'Guardando cita…';
 
   try {
-    const active = getActiveService(state.service, state.addBarba);
-    const saved = await saveBooking({
-      barberId: state.barber.id,
-      fecha: toISODate(state.date),
-      time: state.time,
-      duration: active.dur,
-      serviceId: active.id,
-      serviceName: active.name,
-      pago: state.pago.name,
-      total: active.price,
-      cliente: { nombre: state.nombre, telefono: state.telefono, correo: state.correo || '' },
-    });
+    const active = getBookingDisplay();
 
-    if (state.barber.id === 'any') {
-      state.assignedBarberName = getBarberNameById(saved.barberId);
+    if (!state.sobrecupo) {
+      const saved = await saveBooking({
+        barberId: state.barber.id,
+        fecha: toISODate(state.date),
+        time: state.time,
+        duration: active.dur,
+        serviceId: active.id,
+        serviceName: active.name,
+        pago: state.pago.name,
+        total: active.price,
+        cliente: { nombre: state.nombre, telefono: state.telefono, correo: state.correo || '' },
+      });
+
+      if (state.barber.id === 'any') {
+        state.assignedBarberName = getBarberNameById(saved.barberId);
+      }
+
+      await scheduleReminder(state).catch(() => {});
+      document.getElementById('calLink').href = buildCalendarURL(state);
+      document.getElementById('calLink').classList.remove('hidden');
+    } else {
+      // Sobrecupo: solo WhatsApp, sin bloquear cupo del calendario
+      document.getElementById('calLink').classList.add('hidden');
     }
 
-    await scheduleReminder(state).catch(() => {});
-
-    document.getElementById('calLink').href = buildCalendarURL(state);
     const waUrl = buildConfirmWhatsAppUrl();
     renderConfirmation();
     clearStorage();
     goTo(6);
-    showToast('Cita agendada. Abriendo WhatsApp…', 'success');
+    showToast(
+      state.sobrecupo ? 'Sobrecupo listo. Abriendo WhatsApp…' : 'Cita agendada. Abriendo WhatsApp…',
+      'success',
+    );
 
-    // Abre WhatsApp para enviar el mensaje de confirmación
     try {
       window.open(waUrl, '_blank', 'noopener,noreferrer');
     } catch {
-      /* si el navegador bloquea el popup, el botón de WhatsApp en el paso 6 queda disponible */
+      /* botón WhatsApp en paso 6 como respaldo */
     }
   } catch (err) {
     console.error('[app] Error al confirmar:', err);
@@ -409,27 +441,56 @@ async function confirmarReserva() {
 }
 
 function buildConfirmWhatsAppUrl() {
-  const active = getActiveService(state.service, state.addBarba);
+  const active = getBookingDisplay();
   const { date, time, pago, nombre, telefono } = state;
   const barberName = state.assignedBarberName || state.barber?.name || 'Fernando';
-  const text = `Hola, soy ${nombre} (tel: ${telefono}). Confirmo mi cita en Feryza Barber:\n` +
-    `• Servicio: ${active.name} (${formatPrice(active.price)})\n` +
-    `• Barbero: ${barberName}\n` +
-    `• Fecha: ${formatDateLong(date)}\n` +
-    `• Hora: ${time}\n` +
-    `• Pago: ${pago.name}\n\n` +
-    `¡Llegaré 10 minutos antes!`;
+
+  let text;
+  if (state.sobrecupo) {
+    text =
+      `⚠️⚠️⚠️ SOLICITUD DE SOBRECUPO ⚠️⚠️⚠️\n\n` +
+      `Hola, soy ${nombre} (tel: ${telefono}).\n\n` +
+      `🔴 ESTO ES SOBRECUPO — NO ES UNA HORA DEL CALENDARIO\n` +
+      `🔴 HAY QUE COORDINAR EL HORARIO CONTIGO\n` +
+      `🔴 Valor FIJO sobrecupo: ${formatPrice(SOBRECUPO_PRICE)}\n\n` +
+      `• Servicio preferido: ${state.service?.name || active.name}\n` +
+      `• Barbero: ${barberName}\n` +
+      `• Fecha deseada: ${formatDateLong(date)}\n` +
+      `• Hora: A COORDINAR (sobrecupo)\n` +
+      `• Pago: ${pago.name}\n\n` +
+      `Por favor confírmame si puedes atenderme en sobrecupo y a qué hora. Gracias.`;
+  } else {
+    text = `Hola, soy ${nombre} (tel: ${telefono}). Confirmo mi cita en Feryza Barber:\n` +
+      `• Servicio: ${active.name} (${formatPrice(active.price)})\n` +
+      `• Barbero: ${barberName}\n` +
+      `• Fecha: ${formatDateLong(date)}\n` +
+      `• Hora: ${time}\n` +
+      `• Pago: ${pago.name}\n\n` +
+      `¡Llegaré 10 minutos antes!`;
+  }
   return `https://wa.me/${APP_CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
 }
 
 function renderConfirmation() {
-  const active = getActiveService(state.service, state.addBarba);
+  const active = getBookingDisplay();
   const { barber, date, time, pago } = state;
   const barberDisplay = state.assignedBarberName
     ? `${barber.name} (${state.assignedBarberName})`
     : barber.name;
 
   document.getElementById('confirmWa').href = buildConfirmWhatsAppUrl();
+
+  const title = document.querySelector('.confirm-title');
+  const sub = document.querySelector('.confirm-sub');
+  if (title && sub) {
+    if (state.sobrecupo) {
+      title.textContent = '¡Sobrecupo solicitado!';
+      sub.innerHTML = 'Envía el mensaje por WhatsApp para <strong>coordinar el horario</strong> con el barbero. Valor fijo <strong>$10.000</strong>.';
+    } else {
+      title.textContent = '¡Cita agendada!';
+      sub.innerHTML = 'Envía la confirmación por WhatsApp para finalizar. Llega <strong>10 minutos antes</strong> de tu hora.';
+    }
+  }
 
   let extra = '';
   if (pago.id === 'transferencia') {
@@ -446,11 +507,12 @@ function renderConfirmation() {
   }
 
   document.getElementById('confirmDetail').innerHTML = `
+    ${state.sobrecupo ? '<div class="confirm-row confirm-row--alert"><span>Tipo</span><span>SOBRECUPO — a coordinar</span></div>' : ''}
     <div class="confirm-row"><span>Servicio</span><span>${escapeHtml(active.name)}</span></div>
     <div class="confirm-row"><span>Barbero</span><span>${escapeHtml(barberDisplay)}</span></div>
     <div class="confirm-row"><span>Fecha</span><span>${escapeHtml(formatDateLong(date))}</span></div>
-    <div class="confirm-row"><span>Hora</span><span>${escapeHtml(time)}</span></div>
-    <div class="confirm-row"><span>Duración</span><span>${active.dur} min</span></div>
+    <div class="confirm-row"><span>Hora</span><span>${escapeHtml(state.sobrecupo ? 'A coordinar' : time)}</span></div>
+    ${state.sobrecupo ? '' : `<div class="confirm-row"><span>Duración</span><span>${active.dur} min</span></div>`}
     <div class="confirm-row"><span>Pago</span><span>${escapeHtml(pago.name)}</span></div>
     <div class="confirm-row"><span>Total</span><span class="confirm-total">${formatPrice(active.price)}</span></div>
     ${extra}
@@ -481,7 +543,7 @@ async function restoreUISelections() {
   }
   if (state.date) {
     renderCalendar(state);
-    if (state.time && state.service) {
+    if ((state.time || state.sobrecupo) && state.service) {
       await renderSlots(state, { onTimeSelect: () => updateSummary() });
       document.getElementById('btn3').disabled = false;
     }
@@ -493,6 +555,7 @@ function resetBooking() {
   resetState();
   state.assignedBarberName = undefined;
   state.addBarba = false;
+  state.sobrecupo = false;
   if (BARBERS.length === 1) state.barber = BARBERS[0];
 
   document.querySelectorAll('.sel-card, .barber-card, .pago-card').forEach((c) => c.classList.remove('selected'));
@@ -502,6 +565,7 @@ function resetBooking() {
   document.getElementById('btn1').disabled = true;
   document.getElementById('btn2').disabled = true;
   document.getElementById('btn5').disabled = true;
+  document.getElementById('calLink').classList.remove('hidden');
   renderBankBox(false);
   renderBarbaAddon();
 
