@@ -2,7 +2,7 @@
  * calendar.js — Calendario Feryza Barber (abre domingo con horario reducido)
  */
 
-import { APP_CONFIG, getHoursForDay } from './config.js';
+import { APP_CONFIG } from './config.js';
 import { SOBRECUPO_PRICE, SOBRECUPO_TIME_LABEL } from './data.js';
 import { getAvailableSlots } from './availability.js';
 import { toISODate, formatPrice } from './utils.js';
@@ -13,10 +13,6 @@ let callbacksRef = {};
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 const DAY_NAMES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-
-/** Menos de 2 h hasta el cierre = pocas horas / fuera de horario */
-const SOBRECUPO_REMAINING_MIN = 120;
-const SOBRECUPO_MAX_SLOTS = 2;
 
 export function initCalendar(state, callbacks) {
   callbacksRef = callbacks;
@@ -101,28 +97,6 @@ export function renderCalendar(state) {
   }
 }
 
-/** Solo hoy: pocas horas restantes, después del cierre, o casi sin cupos */
-export function shouldOfferSobrecupo(date, availableCount = 0) {
-  if (!date) return false;
-  const now = new Date();
-  const isToday = date.d === now.getDate()
-    && date.m === now.getMonth()
-    && date.y === now.getFullYear();
-  if (!isToday) return false;
-
-  const hours = getHoursForDay(now.getDay());
-  if (!hours) return true;
-
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-  const closeMin = hours.close * 60;
-
-  if (nowMin >= closeMin) return true;
-  if ((closeMin - nowMin) <= SOBRECUPO_REMAINING_MIN) return true;
-  if (availableCount <= SOBRECUPO_MAX_SLOTS) return true;
-
-  return false;
-}
-
 function appendSobrecupoButton(state, callbacks, grid) {
   const wrap = document.createElement('div');
   wrap.className = 'sobrecupo-wrap';
@@ -192,10 +166,8 @@ export async function renderSlots(state, callbacks = callbacksRef) {
     });
   }
 
-  // Al final: opción sobrecupo (nunca al inicio)
-  if (shouldOfferSobrecupo(state.date, available.length)) {
-    appendSobrecupoButton(state, callbacks, grid);
-  }
+  // Al final: sobrecupo siempre disponible como opción extra
+  appendSobrecupoButton(state, callbacks, grid);
 
   if (state.sobrecupo) {
     document.getElementById('btn3').disabled = false;
