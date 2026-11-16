@@ -657,6 +657,12 @@ input, select, textarea {
   color: var(--ink);
   line-height: 1.45;
 }
+.policy-hint--debt,
+.policy-box--debt {
+  background: #fff4e8;
+  border-color: #c45c26;
+  color: #3a1f0a;
+}
 .policy-box {
   margin: 12px 0 4px;
   padding: 12px 14px;
@@ -666,6 +672,10 @@ input, select, textarea {
   font-size: .88rem;
   color: var(--ink);
   line-height: 1.5;
+}
+.confirm-debt {
+  margin: 0 0 16px;
+  text-align: left;
 }
 .hours-hint {
   font-size: .78rem; color: var(--muted);

@@ -371,7 +371,7 @@ function updateSummary() {
     ? `<div class="summary-mobile-box"><div class="summary-mobile-title">Resumen</div>${rows}</div>`
     : '';
 
-  const policy = document.querySelector('#step5 .policy-box');
+  const policy = document.querySelector('#step5 .policy-box:not(.policy-box--debt)');
   if (policy) {
     policy.innerHTML = state.sobrecupo
       ? `<strong>⚠️ SOBRECUPO:</strong> Al confirmar se abrirá WhatsApp para <strong>coordinar el horario con el barbero</strong>. Valor fijo <strong>${formatPrice(SOBRECUPO_PRICE)}</strong>. No es una hora del calendario.`
@@ -458,6 +458,7 @@ function buildConfirmWhatsAppUrl() {
       `• Fecha deseada: ${formatDateLong(date)}\n` +
       `• Hora: A COORDINAR (sobrecupo)\n` +
       `• Pago: ${pago.name}\n\n` +
+      `Entiendo que si dejo pagos pendientes puedo ser vetado de la barbería.\n` +
       `Por favor confírmame si puedes atenderme en sobrecupo y a qué hora. Gracias.`;
   } else {
     text = `Hola, soy ${nombre} (tel: ${telefono}). Confirmo mi cita en Feryza Barber:\n` +
@@ -466,7 +467,8 @@ function buildConfirmWhatsAppUrl() {
       `• Fecha: ${formatDateLong(date)}\n` +
       `• Hora: ${time}\n` +
       `• Pago: ${pago.name}\n\n` +
-      `¡Llegaré 10 minutos antes!`;
+      `¡Llegaré 10 minutos antes!\n` +
+      `Entiendo que si dejo pagos pendientes puedo ser vetado de la barbería.`;
   }
   return `https://wa.me/${APP_CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
 }

@@ -45,6 +45,7 @@
         <p class="step-sub">Elige uno para continuar</p>
         <p class="hours-hint">Lun–Sáb 10:00–21:00 · Dom 11:00–14:00 · turnos cada 45 min</p>
         <p class="policy-hint">⚠️ <strong>Importante:</strong> Para asegurar tu cupo debes <strong>confirmar tu cita por WhatsApp</strong> en el paso final. Recuerda llegar <strong>10 minutos antes</strong>.</p>
+        <p class="policy-hint policy-hint--debt" role="note">💳 <strong>Pagos pendientes:</strong> Si tienes un pago pendiente, debes regularizarlo. De lo contrario serás <strong>vetado de la barbería</strong> y no podrás reservar.</p>
         <div class="card-grid" id="servicios-list"></div>
         <div class="barba-addon hidden" id="barbaAddon"></div>
         <button class="btn-continue" id="btn1" disabled>
@@ -121,6 +122,9 @@
         <div class="bank-box hidden" id="bankBox" aria-live="polite"></div>
         <div class="divider"></div>
         <div class="summary-mobile" id="summaryMobile"></div>
+        <div class="policy-box policy-box--debt" role="note">
+          <strong>💳 Pagos pendientes:</strong> Si debes alguna cita anterior, <strong>págala antes o al llegar</strong>. Quienes dejen pagos pendientes serán <strong>vetados de la barbería</strong> y no podrán reservar de nuevo.
+        </div>
         <div class="policy-box" role="note">
           <strong>⚠️ Paso final:</strong> Al presionar <strong>"Confirmar cita por WhatsApp"</strong> se guardará tu hora y se abrirá WhatsApp con el mensaje listo para enviar. Recuerda llegar <strong>10 minutos antes</strong> de tu turno.
         </div>
@@ -137,6 +141,7 @@
           </div>
           <h1 class="confirm-title">¡Cita agendada!</h1>
           <p class="confirm-sub">Envía la confirmación por WhatsApp para finalizar. Llega <strong>10 minutos antes</strong> de tu hora.</p>
+          <p class="policy-hint policy-hint--debt confirm-debt" role="note">💳 Recuerda: los <strong>pagos pendientes</strong> deben saldarse. Si no, serás <strong>vetado de la barbería</strong>.</p>
           <div class="confirm-detail" id="confirmDetail"></div>
           <div class="confirm-actions">
             <a class="btn-wa" id="confirmWa" href="#" target="_blank" rel="noopener noreferrer">
