@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0E2A2A">
+  <meta name="description" content="Sistema de reservas online para clínicas, dentales, veterinarias y estéticas en Renca, Quilicura y Providencia. Agenda 24/7 con tu marca.">
+  <title>Feryza Agenda — Reservas para tu clínica</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0E2A2A;
+      --ink-soft: #1A3F3F;
+      --sand: #F3EDE3;
+      --sand-deep: #E8DFD0;
+      --cream: #FAF7F1;
+      --amber: #C45C1A;
+      --amber-dark: #9A4512;
+      --line: rgba(14, 42, 42, .14);
+      --ok: #1F6B4A;
+      --f-display: 'Fraunces', Georgia, serif;
+      --f-body: 'Outfit', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--f-body);
+      color: var(--ink);
+      background: var(--cream);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+    a { color: inherit; }
+    img { display: block; max-width: 100%; }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; padding: 14px 22px;
+      background: rgba(250, 247, 241, .92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      font-family: var(--f-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -.02em;
+    }
+    .brand span { color: var(--amber); }
+    .topbar-cta {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--ink); color: var(--cream);
+      text-decoration: none; font-weight: 600; font-size: .9rem;
+      padding: 10px 16px; border-radius: 8px;
+      transition: background .2s ease, transform .2s ease;
+    }
+    .topbar-cta:hover { background: var(--ink-soft); transform: translateY(-1px); }
+
+    /* Hero: one composition, brand first, full-bleed */
+    .hero {
+      position: relative;
+      min-height: min(92vh, 820px);
+      display: grid;
+      align-items: end;
+      padding: clamp(48px, 8vw, 96px) clamp(20px, 5vw, 72px) clamp(40px, 6vw, 72px);
+      color: var(--cream);
+      overflow: hidden;
+      background:
+        linear-gradient(160deg, rgba(14,42,42,.88) 0%, rgba(14,42,42,.55) 45%, rgba(14,42,42,.82) 100%),
+        radial-gradient(ellipse 80% 60% at 70% 20%, rgba(196,92,26,.35), transparent 55%),
+        linear-gradient(135deg, #0E2A2A, #1A4A45 40%, #2A5C4A);
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        repeating-linear-gradient(
+          -18deg,
+          transparent,
+          transparent 28px,
+          rgba(250,247,241,.03) 28px,
+          rgba(250,247,241,.03) 29px
+        );
+      animation: drift 28s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes drift {
+      from { background-position: 0 0; }
+      to { background-position: 180px 90px; }
+    }
+    .hero-inner { position: relative; z-index: 1; max-width: 720px; }
+    .hero-brand {
+      font-family: var(--f-display);
+      font-size: clamp(2.6rem, 7vw, 4.8rem);
+      font-weight: 700;
+      line-height: .95;
+      letter-spacing: -.03em;
+      margin-bottom: 18px;
+      animation: rise .7s ease both;
+    }
+    .hero-brand em {
+      font-style: normal;
+      color: #F0B27A;
+    }
+    .hero h1 {
+      font-family: var(--f-body);
+      font-weight: 500;
+      font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+      max-width: 28ch;
+      margin-bottom: 12px;
+      animation: rise .7s .08s ease both;
+    }
+    .hero p {
+      font-size: 1.02rem;
+      opacity: .88;
+      max-width: 38ch;
+      margin-bottom: 28px;
+      animation: rise .7s .14s ease both;
+    }
+    .hero-actions {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      animation: rise .7s .2s ease both;
+    }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(18px); }
+      to { opacity: 1; transform: none; }
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      background: var(--amber); color: #fff;
+      text-decoration: none; font-weight: 700; font-size: 1rem;
+      padding: 14px 22px; border-radius: 8px;
+      transition: background .2s ease, transform .2s ease;
+    }
+    .btn-primary:hover { background: var(--amber-dark); transform: translateY(-1px); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent; color: var(--cream);
+      text-decoration: none; font-weight: 600; font-size: .95rem;
+      padding: 14px 18px; border-radius: 8px;
+      border: 1px solid rgba(250,247,241,.35);
+      transition: background .2s ease, border-color .2s ease;
+    }
+    .btn-ghost:hover { background: rgba(250,247,241,.08); border-color: rgba(250,247,241,.6); }
+
+    .section {
+      padding: clamp(48px, 8vw, 88px) clamp(20px, 5vw, 72px);
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-kicker {
+      font-size: .78rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--amber); margin-bottom: 10px;
+    }
+    .section h2 {
+      font-family: var(--f-display);
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      line-height: 1.1;
+      letter-spacing: -.02em;
+      margin-bottom: 12px;
+      max-width: 18ch;
+    }
+    .section-lead {
+      font-size: 1.05rem; color: var(--ink-soft);
+      max-width: 48ch; margin-bottom: 28px;
+    }
+
+    .zones {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      margin-top: 8px;
+    }
+    .zone {
+      font-weight: 600; font-size: .92rem;
+      padding: 8px 14px;
+      background: var(--sand);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+    }
+
+    .rubros {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 8px;
+    }
+    @media (min-width: 720px) {
+      .rubros { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    .rubro {
+      background: var(--sand);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px 16px;
+      min-height: 120px;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .rubro:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(14,42,42,.08); }
+    .rubro strong {
+      display: block;
+      font-family: var(--f-display);
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+    }
+    .rubro span { font-size: .88rem; color: var(--ink-soft); }
+
+    .pain-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 760px) {
+      .pain-grid { grid-template-columns: 1fr 1fr; }
+    }
+    .pain-item {
+      padding: 22px 20px;
+      background: #fff;
+      border-left: 3px solid var(--amber);
+      border-radius: 0 10px 10px 0;
+    }
+    .pain-item h3 {
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+    }
+    .pain-item p { font-size: .92rem; color: var(--ink-soft); }
+
+    .steps {
+      counter-reset: step;
+      display: grid; gap: 16px;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      font-family: var(--f-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--amber);
+      width: 36px;
+    }
+    .step h3 { font-size: 1.05rem; margin-bottom: 4px; }
+    .step p { font-size: .92rem; color: var(--ink-soft); }
+
+    .pricing {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 800px) {
+      .pricing { grid-template-columns: repeat(3, 1fr); align-items: stretch; }
+    }
+    .plan {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .plan.featured {
+      background: var(--ink);
+      color: var(--cream);
+      border-color: var(--ink);
+      transform: scale(1.02);
+    }
+    .plan.featured .plan-price { color: #F0B27A; }
+    .plan.featured .plan-note { color: rgba(250,247,241,.75); }
+    .plan-name {
+      font-family: var(--f-display);
+      font-size: 1.35rem;
+    }
+    .plan-price {
+      font-family: var(--f-display);
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .plan-price small {
+      font-family: var(--f-body);
+      font-size: .85rem;
+      font-weight: 500;
+      opacity: .75;
+    }
+    .plan ul {
+      list-style: none;
+      display: flex; flex-direction: column; gap: 8px;
+      font-size: .9rem;
+      flex: 1;
+    }
+    .plan li::before {
+      content: '✓ ';
+      color: var(--ok);
+      font-weight: 700;
+    }
+    .plan.featured li::before { color: #F0B27A; }
+    .plan-note { font-size: .82rem; opacity: .8; }
+    .plan .btn-primary { margin-top: 8px; width: 100%; }
+    .plan.featured .btn-primary {
+      background: var(--amber);
+    }
+
+    .demo-band {
+      margin: 0 clamp(20px, 5vw, 72px) clamp(48px, 8vw, 88px);
+      padding: clamp(28px, 5vw, 48px);
+      border-radius: 16px;
+      background:
+        linear-gradient(120deg, var(--sand) 0%, #fff 50%, var(--sand-deep) 100%);
+      border: 1px solid var(--line);
+      display: grid;
+      gap: 18px;
+      align-items: center;
+    }
+    @media (min-width: 800px) {
+      .demo-band { grid-template-columns: 1.4fr auto; }
+    }
+    .demo-band h2 {
+      font-family: var(--f-display);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      margin-bottom: 8px;
+    }
+    .demo-band p { color: var(--ink-soft); max-width: 42ch; }
+
+    .cta-final {
+      background: var(--ink);
+      color: var(--cream);
+      padding: clamp(48px, 8vw, 88px) clamp(20px, 5vw, 72px);
+      text-align: center;
+    }
+    .cta-final h2 {
+      font-family: var(--f-display);
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      margin-bottom: 12px;
+      max-width: 16ch;
+      margin-inline: auto;
+    }
+    .cta-final p {
+      opacity: .85;
+      margin-bottom: 24px;
+      max-width: 40ch;
+      margin-inline: auto;
+    }
+    .cta-final .btn-primary { font-size: 1.05rem; padding: 16px 28px; }
+
+    footer.offer-foot {
+      padding: 20px;
+      text-align: center;
+      font-size: .82rem;
+      color: var(--ink-soft);
+      border-top: 1px solid var(--line);
+    }
+    footer.offer-foot a { color: var(--amber); font-weight: 600; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">Feryza <span>Agenda</span></div>
+    <a class="topbar-cta" id="waTop" href="#" target="_blank" rel="noopener noreferrer">Hablar por WhatsApp</a>
+  </div>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="hero-brand">Feryza <em>Agenda</em></div>
+      <h1>Tu clínica llena cupos sin perder horas en WhatsApp.</h1>
+      <p>Sistema de reservas online con tu marca, listo para clínicas privadas, dentales, veterinarias y estéticas en Renca, Quilicura y Providencia.</p>
+      <div class="hero-actions">
+        <a class="btn-primary" id="waHero" href="#" target="_blank" rel="noopener noreferrer">Quiero mi agenda ahora</a>
+        <a class="btn-ghost" href="#precios">Ver precios</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="zonas">
+    <div class="section-kicker">Zona de impacto</div>
+    <h2>Empezamos donde está tu negocio</h2>
+    <p class="section-lead">Foco comercial en tres comunas con alta demanda de horas y mucha agenda todavía hecha a mano.</p>
+    <div class="zones">
+      <span class="zone">Renca</span>
+      <span class="zone">Quilicura</span>
+      <span class="zone">Providencia</span>
+    </div>
+  </section>
+
+  <section class="section" id="rubros">
+    <div class="section-kicker">Para quién es</div>
+    <h2>Hecho para locales que viven de la hora</h2>
+    <p class="section-lead">Misma base probada en barbería real. Se adapta a tu catálogo, profesionales y horarios.</p>
+    <div class="rubros">
+      <div class="rubro">
+        <strong>Clínicas privadas</strong>
+        <span>Consultas, controles y especialistas sin choques de agenda.</span>
+      </div>
+      <div class="rubro">
+        <strong>Dentales</strong>
+        <span>Evaluación, tratamiento y seguimiento con confirmación clara.</span>
+      </div>
+      <div class="rubro">
+        <strong>Veterinarias</strong>
+        <span>Consulta, vacunas y controles sin saturarte de mensajes.</span>
+      </div>
+      <div class="rubro">
+        <strong>Estéticas</strong>
+        <span>Servicios, packs y profesionales con cupos visibles 24/7.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="problema">
+    <div class="section-kicker">El problema</div>
+    <h2>Si agendan solo por WhatsApp, estás perdiendo plata</h2>
+    <div class="pain-grid">
+      <div class="pain-item">
+        <h3>Horas muertas en el chat</h3>
+        <p>Responder “¿tienen hora mañana?” una y otra vez te saca de atender clientes que ya están en el local.</p>
+      </div>
+      <div class="pain-item">
+        <h3>Cupos que se pisan</h3>
+        <p>Dos personas creen tener la misma hora. Resultado: pelea, mala reseña y día desordenado.</p>
+      </div>
+      <div class="pain-item">
+        <h3>Inasistencias sin aviso</h3>
+        <p>Sin confirmación ni recordatorio, el no-show te come la caja del día.</p>
+      </div>
+      <div class="pain-item">
+        <h3>AgendaPro y similares se sienten caros</h3>
+        <p>Pagás software genérico. Acá te entregamos algo a tu medida, con tu marca, y soporte cercano.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="como">
+    <div class="section-kicker">Cómo funciona</div>
+    <h2>De la conversación a tu agenda online</h2>
+    <div class="steps">
+      <div class="step">
+        <div>
+          <h3>Me cuentas tu local</h3>
+          <p>Rubro, servicios, horarios y profesionales. En 15 minutos sabemos qué necesitas.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <h3>Te armo la agenda con tu marca</h3>
+          <p>Página de reserva + panel de administración. El cliente elige, confirma y tú controlas.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <h3>Lanzas y llenas cupos</h3>
+          <p>Link en Instagram, Google y WhatsApp. Primer mes de mantención gratis para que arranques sin fricción.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="precios">
+    <div class="section-kicker">Inversión</div>
+    <h2>Precios claros para arrancar ya</h2>
+    <p class="section-lead">1 mes de mantención gratis + capacitación al entregar. Sin letra chica de plataformas grandes.</p>
+    <div class="pricing">
+      <div class="plan">
+        <div class="plan-name">Arranque</div>
+        <div class="plan-price">$150.000 <small>setup</small></div>
+        <ul>
+          <li>1 local / 1 marca</li>
+          <li>Catálogo de servicios</li>
+          <li>Agenda + panel admin</li>
+          <li>Confirmación por WhatsApp</li>
+          <li>1 mes mantención gratis</li>
+        </ul>
+        <p class="plan-note">Luego $20.000 / mes</p>
+        <a class="btn-primary" data-plan="Arranque ($150.000)" href="#" target="_blank" rel="noopener noreferrer">Pedir Arranque</a>
+      </div>
+      <div class="plan featured">
+        <div class="plan-name">Clínica Pro</div>
+        <div class="plan-price">$195.000 <small>setup</small></div>
+        <ul>
+          <li>Todo Arranque</li>
+          <li>Varios profesionales</li>
+          <li>Bloqueo vacaciones / cierres</li>
+          <li>Ajustes de copy y flujo</li>
+          <li>Capacitación en vivo</li>
+        </ul>
+        <p class="plan-note">Luego $28.000 / mes · el más pedido</p>
+        <a class="btn-primary" data-plan="Clínica Pro ($195.000)" href="#" target="_blank" rel="noopener noreferrer">Pedir Clínica Pro</a>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Premium</div>
+        <div class="plan-price">$240.000 <small>setup</small></div>
+        <ul>
+          <li>Todo Clínica Pro</li>
+          <li>Hasta 2 locales</li>
+          <li>Prioridad de soporte</li>
+          <li>Cambios de catálogo el 1er mes</li>
+          <li>Listo para dominio propio</li>
+        </ul>
+        <p class="plan-note">Luego $35.000 / mes</p>
+        <a class="btn-primary" data-plan="Premium ($240.000)" href="#" target="_blank" rel="noopener noreferrer">Pedir Premium</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="demo-band" id="demo">
+    <div>
+      <h2>Mira una agenda real funcionando</h2>
+      <p>Demo en vivo de reservas (barbería). El mismo motor se adapta a tu clínica, dental, vet o estética.</p>
+    </div>
+    <a class="btn-primary" href="https://kirit0-1.github.io/feryza-booking/" target="_blank" rel="noopener noreferrer">Abrir demo</a>
+  </div>
+
+  <section class="cta-final" id="contacto">
+    <h2>¿Listo para dejar de perder cupos?</h2>
+    <p>Escríbeme hoy. Te cotizo en el día y podemos dejar tu agenda online esta misma semana.</p>
+    <a class="btn-primary" id="waFinal" href="#" target="_blank" rel="noopener noreferrer">Escribir por WhatsApp ahora</a>
+  </section>
+
+  <footer class="offer-foot">
+    Feryza Agenda · Renca · Quilicura · Providencia ·
+    <a href="kit-ventas.html">Kit interno de ventas</a>
+  </footer>
+
+  <script>
+    const WA = '56979608342';
+    function waLink(text) {
+      return `https://wa.me/${WA}?text=${encodeURIComponent(text)}`;
+    }
+    const intro =
+      'Hola, vi Feryza Agenda y quiero una cotización de sistema de reservas para mi local (clínica / dental / veterinaria / estética) en Renca, Quilicura o Providencia.';
+
+    document.getElementById('waTop').href = waLink(intro);
+    document.getElementById('waHero').href = waLink(intro + '\n\nQuiero empezar lo antes posible.');
+    document.getElementById('waFinal').href = waLink(intro + '\n\n¿Me puedes cotizar hoy?');
+
+    document.querySelectorAll('[data-plan]').forEach((el) => {
+      const plan = el.getAttribute('data-plan');
+      el.href = waLink(
+        `Hola, me interesa el plan ${plan} de Feryza Agenda.\n` +
+        `Rubro: (clínica / dental / veterinaria / estética)\n` +
+        `Comuna: (Renca / Quilicura / Providencia)\n` +
+        `Nombre del local: `
+      );
+    });
+  </script>
+</body>
+</html>

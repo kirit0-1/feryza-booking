@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Kit de ventas — Feryza Agenda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0E2A2A;
+      --sand: #F3EDE3;
+      --cream: #FAF7F1;
+      --amber: #C45C1A;
+      --line: rgba(14,42,42,.14);
+      --f-display: 'Fraunces', Georgia, serif;
+      --f-body: 'Outfit', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--f-body); background: var(--cream); color: var(--ink); line-height: 1.55; padding: 24px 18px 64px; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    h1 { font-family: var(--f-display); font-size: clamp(1.8rem, 4vw, 2.4rem); margin-bottom: 8px; }
+    .sub { color: #1A3F3F; margin-bottom: 28px; }
+    h2 { font-family: var(--f-display); font-size: 1.35rem; margin: 32px 0 12px; }
+    h3 { font-size: 1.02rem; margin: 18px 0 8px; }
+    p, li { font-size: .95rem; }
+    ul, ol { padding-left: 1.2rem; margin-bottom: 12px; }
+    li { margin-bottom: 6px; }
+    .banner {
+      background: var(--ink); color: var(--cream);
+      padding: 14px 16px; border-radius: 10px; margin-bottom: 24px; font-size: .92rem;
+    }
+    .banner a { color: #F0B27A; font-weight: 700; }
+    .box {
+      background: #fff; border: 1px solid var(--line); border-radius: 10px;
+      padding: 14px 16px; margin-bottom: 12px; white-space: pre-wrap; font-size: .88rem;
+      position: relative;
+    }
+    .copy {
+      display: inline-flex; margin-top: 8px;
+      background: var(--amber); color: #fff; border: 0; border-radius: 6px;
+      padding: 8px 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .lead {
+      background: var(--sand); border: 1px solid var(--line); border-radius: 10px;
+      padding: 14px 16px; margin-bottom: 10px;
+    }
+    .lead strong { display: block; font-size: 1rem; margin-bottom: 4px; }
+    .tag {
+      display: inline-block; font-size: .72rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+      background: #fff; border: 1px solid var(--amber); color: var(--amber);
+      padding: 2px 8px; border-radius: 4px; margin-bottom: 6px;
+    }
+    .tag.hot { background: var(--amber); color: #fff; }
+    a { color: var(--amber); }
+    .meta { font-size: .86rem; color: #1A3F3F; }
+    .plan-day {
+      background: #fff; border-left: 3px solid var(--amber);
+      padding: 12px 14px; margin-bottom: 10px; border-radius: 0 8px 8px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="banner">
+      Uso interno. Página pública para clientes:
+      <a href="oferta.html">oferta.html</a>
+      · Demo: <a href="https://kirit0-1.github.io/feryza-booking/" target="_blank" rel="noopener">feryza-booking</a>
+    </div>
+
+    <h1>Kit de ventas urgente</h1>
+    <p class="sub">Meta: 10 contactos/día · 3 demos/semana · 1 cierre en 14 días. Prioriza locales que agendan solo por WhatsApp (dolor alto, decisión rápida).</p>
+
+    <h2>1. Plan de hoy (2 horas)</h2>
+    <div class="plan-day"><strong>0–20 min:</strong> Abre Google Maps y busca con las queries de abajo. Guarda 15 fichas (nombre + WhatsApp/tel + comuna).</div>
+    <div class="plan-day"><strong>20–90 min:</strong> Manda el mensaje corto a 10 locales. Si contestan, manda el link de <code>oferta.html</code> + demo.</div>
+    <div class="plan-day"><strong>90–120 min:</strong> Ofrece demo de 10 min por videollamada o presencial cerca. Cierra con plan Arranque o Clínica Pro.</div>
+
+    <h2>2. Búsquedas para encontrar clientes</h2>
+    <p>Copia en Google Maps / Instagram / Facebook:</p>
+    <ul>
+      <li>“clínica dental Quilicura”</li>
+      <li>“odontología Renca”</li>
+      <li>“veterinaria Quilicura” / “veterinaria Renca”</li>
+      <li>“centro de estética Providencia”</li>
+      <li>“depilación láser Quilicura”</li>
+      <li>“clínica privada Renca”</li>
+      <li>“consulta médica Providencia particular”</li>
+    </ul>
+    <p><strong>Filtro de oro:</strong> si en su web dice “agenda por WhatsApp” y NO tienen reservas online propias → prospecto A.</p>
+    <p><strong>Evita primero:</strong> cadenas grandes (UnoSalud, RedSalud, etc.) salvo que pidan algo a medida.</p>
+
+    <h2>3. Scripts WhatsApp (copiar/pegar)</h2>
+
+    <h3>A) Primer contacto (frío)</h3>
+    <div class="box" id="s1">Hola 👋 soy Josué. Ayudo a clínicas, dentales, veterinarias y estéticas en Renca, Quilicura y Providencia a dejar de perder horas por WhatsApp.
+
+Les armo una agenda online con su marca (el cliente reserva solo, ustedes controlan el panel).
+
+¿Les mando un ejemplo en 30 segundos?</div>
+    <button class="copy" data-target="s1">Copiar</button>
+
+    <h3>B) Si piden info</h3>
+    <div class="box" id="s2">Perfecto. Acá va la propuesta clara:
+🔗 Oferta: https://kirit0-1.github.io/feryza-booking/oferta.html
+🔗 Demo en vivo: https://kirit0-1.github.io/feryza-booking/
+
+Setup desde $150.000 · 1 mes de mantención gratis · capacitación al entregar.
+
+Si quieren, les armo una demo con el nombre de su local esta semana.</div>
+    <button class="copy" data-target="s2">Copiar</button>
+
+    <h3>C) Cierre suave</h3>
+    <div class="box" id="s3">Si les acomoda, el plan más pedido es Clínica Pro ($195.000): varios profesionales, bloqueo de vacaciones y capacitación en vivo.
+
+¿Arrancamos con ese o prefieren Arranque ($150.000) para un solo box?</div>
+    <button class="copy" data-target="s3">Copiar</button>
+
+    <h3>D) Seguimiento (48 h sin respuesta)</h3>
+    <div class="box" id="s4">Hola, te dejo el dato corto: cada día que la agenda es solo por WhatsApp, se pierden cupos y se pisan horas.
+
+Cuando quieran, les muestro en 10 minutos cómo quedaría su clínica. Sin compromiso.</div>
+    <button class="copy" data-target="s4">Copiar</button>
+
+    <h2>4. Leads prioritarios (empezar por estos)</h2>
+    <p class="meta">Prioridad = agendan mucho por WhatsApp o son independientes. Verifica el número antes de escribir (pueden cambiar).</p>
+
+    <div class="lead">
+      <span class="tag hot">Prioridad A · Dental · Quilicura</span>
+      <strong>Clínica Dental DALIZ</strong>
+      <div class="meta">Agenda por WhatsApp · Av. Las Torres 191, local 10<br>
+      WhatsApp: +56 9 4816 4448 · <a href="https://clinicadaliz.cl/" target="_blank" rel="noopener">web</a></div>
+    </div>
+    <div class="lead">
+      <span class="tag hot">Prioridad A · Dental · Quilicura</span>
+      <strong>Specialdent</strong>
+      <div class="meta">Camino del Cerro 1528<br>
+      WhatsApp: +56 9 6879 8991 · <a href="https://specialdent.cl/contacto/" target="_blank" rel="noopener">web</a></div>
+    </div>
+    <div class="lead">
+      <span class="tag hot">Prioridad A · Dental · Quilicura</span>
+      <strong>Clínica Dental Lo Cruzat — Dra. Alejandra Alvear</strong>
+      <div class="meta">Av. Lo Cruzat 0493<br>
+      Tel/WhatsApp: +56 9 4970 7555 · <a href="https://locruzat.cl/" target="_blank" rel="noopener">web</a></div>
+    </div>
+    <div class="lead">
+      <span class="tag">Dental · Quilicura</span>
+      <strong>Clínica Dental My Dent</strong>
+      <div class="meta">Av. Manuel Antonio Matta 532 · WhatsApp reportado: +56 9 8998 6353</div>
+    </div>
+    <div class="lead">
+      <span class="tag">Dental · Quilicura</span>
+      <strong>Fiorani Dental Studio</strong>
+      <div class="meta">Av. Manuel Antonio Matta 712 · independiente, buen rating</div>
+    </div>
+    <div class="lead">
+      <span class="tag">Estética · Renca</span>
+      <strong>Yuri Studio</strong>
+      <div class="meta">Av. Domingo Santa María 3517 · ya usa AgendaPro (pitch: más barato + a medida)<br>
+      +56 9 8617 4786 / +56 9 3522 0113 · <a href="https://yuristudio.cl/" target="_blank" rel="noopener">web</a></div>
+    </div>
+    <div class="lead">
+      <span class="tag">Estética · Providencia</span>
+      <strong>Akali Centro de Estética</strong>
+      <div class="meta">Salvador 95, Of. 510 · +56 9 4030 1706 · <a href="https://agendaprovidencia.akali.cl/" target="_blank" rel="noopener">agenda</a></div>
+    </div>
+    <div class="lead">
+      <span class="tag">Estética · Providencia</span>
+      <strong>Body & Soul</strong>
+      <div class="meta">Av. Salvador 431 · contacto@esteticabodysoul.cl · <a href="https://esteticabodysoul.cl/" target="_blank" rel="noopener">web</a></div>
+    </div>
+    <div class="lead">
+      <span class="tag">Estética/Dental · Providencia</span>
+      <strong>Clínica Heos</strong>
+      <div class="meta">Guardia Vieja 255 Of. 320 · +56 2 2517 4982 · <a href="https://www.clinicaheos.cl/agendar/" target="_blank" rel="noopener">agendar</a></div>
+    </div>
+    <div class="lead">
+      <span class="tag">Vet · Renca</span>
+      <strong>Hospital Veterinario Nueva Renca</strong>
+      <div class="meta">Ya tienen agenda web (pitch: panel más simple / marca / precio)<br>
+      WhatsApp: +56 9 7360 8870 · <a href="https://veterinarianuevarenca.cl/" target="_blank" rel="noopener">web</a></div>
+    </div>
+
+    <h2>5. Objeciones rápidas</h2>
+    <ul>
+      <li><strong>“Es caro”</strong> → Una sola hora recuperada al mes ya paga la mantención. Setup se recupera en no-shows evitados.</li>
+      <li><strong>“Ya usamos WhatsApp”</strong> → Justamente por eso: el chat no escala. La agenda trabaja 24/7 mientras atienden.</li>
+      <li><strong>“Ya tenemos AgendaPro”</strong> → Ok. ¿Cuánto pagan al mes? Les armo algo a medida, más cercano y con cambios sin ticket eterno.</li>
+      <li><strong>“Después”</strong> → Puedo dejarles una demo con el nombre de su local esta semana; así lo ven concreto.</li>
+    </ul>
+
+    <h2>6. Links listos</h2>
+    <ul>
+      <li>Oferta pública: <a href="oferta.html">oferta.html</a></li>
+      <li>Demo reservas: <a href="index.html">index.html</a></li>
+      <li>Panel demo: <a href="admin.html">admin.html</a></li>
+      <li>Tu WhatsApp comercial: <a href="https://wa.me/56979608342" target="_blank" rel="noopener">wa.me/56979608342</a></li>
+    </ul>
+  </div>
+
+  <script>
+    document.querySelectorAll('.copy').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const el = document.getElementById(btn.dataset.target);
+        const text = el.textContent.trim();
+        try {
+          await navigator.clipboard.writeText(text);
+          btn.textContent = 'Copiado ✓';
+          setTimeout(() => { btn.textContent = 'Copiar'; }, 1500);
+        } catch {
+          btn.textContent = 'Selecciona y copia';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

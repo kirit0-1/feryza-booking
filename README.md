@@ -3,7 +3,9 @@
 App estática de reservas (HTML/JS + Supabase). Sin build: lista para **GitHub Pages** o **Vercel**.
 
 **Demo:** https://kirit0-1.github.io/feryza-booking/  
-**Panel:** https://kirit0-1.github.io/feryza-booking/admin.html · PIN `feryza2026`
+**Panel:** https://kirit0-1.github.io/feryza-booking/admin.html · PIN `feryza2026`  
+**Oferta comercial (clínicas / dental / vet / estética):** https://kirit0-1.github.io/feryza-booking/oferta.html  
+**Kit interno de ventas:** https://kirit0-1.github.io/feryza-booking/kit-ventas.html
 
 ## Qué incluye
 
